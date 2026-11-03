@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MonOCAC · Laboratorio clínico</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#10302f;--bg:#f3f6f5;--card:#fff;--line:#d7e0de;--teal:#0e6b64;--teal2:#e2f1ef;--red:#c62828;--red2:#fde8e8;--amb:#b26a00;--amb2:#fff1d6;--mut:#5b6f6d}
+[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}:focus-visible{outline:3px solid #f2a900;outline-offset:2px}
+.btn{border:1px solid var(--teal);background:var(--teal);color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer}
+.btn.sec{background:#fff;color:var(--teal)}.btn.red{background:var(--red);border-color:var(--red)}.btn.sm{padding:4px 10px;font-size:14px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid #aebdbb;border-radius:6px;background:#fff}
+label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
+#login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:28px;width:min(380px,100%)}
+.box h1{margin:0 0 4px;font-size:26px}.mut{color:var(--mut);font-size:14px}.err{color:var(--red);min-height:22px;font-size:14px}
+header{background:var(--ink);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 20px;flex-wrap:wrap}
+header b{font-size:20px;margin-right:auto}header .btn{background:transparent;border-color:#6d908c}
+main{max-width:1250px;margin:0 auto;padding:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:6px;padding:10px 14px;cursor:pointer;text-align:left}
+.kpi.on{background:var(--teal2)}.kpi.crit{border-left-color:var(--red)}.kpi b{font-size:28px;display:block}
+.bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bar input{flex:1;min-width:220px}
+.tw{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:820px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:14px;color:var(--mut);background:#f8fbfa}tr.c td:first-child{border-left:5px solid var(--red)}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:700}
+.p1{background:var(--red2);color:var(--red)}.p2{background:var(--amb2);color:var(--amb)}.p3{background:#e9eeed;color:var(--mut)}
+.f-crítico{background:var(--red);color:#fff}.f-alto,.f-bajo{background:var(--amb2);color:var(--amb)}.f-normal{background:var(--teal2);color:var(--teal)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:34px;text-align:center;color:var(--mut)}
+dialog{border:0;border-radius:10px;padding:22px;width:min(560px,94vw);box-shadow:0 10px 40px #0005}dialog::backdrop{background:#0a1f1e99}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.row{display:grid;grid-template-columns:1fr 110px 120px;gap:8px;align-items:center;margin:8px 0}
+.foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+#toasts{position:fixed;top:14px;right:14px;display:grid;gap:8px;z-index:9;width:min(360px,92vw)}
+.toast{background:var(--red);color:#fff;padding:12px 14px;border-radius:8px;box-shadow:0 4px 18px #0004}
+.toast.ok{background:var(--teal)}
+@media(max-width:600px){.g2{grid-template-columns:1fr}}
+</style></head><body>
+<div id="toasts" role="alert" aria-live="assertive"></div>
+<section id="login"><form class="box" id="lf">
+<h1>MonOCAC</h1><p class="mut">Laboratorio clínico · acceso del personal</p>
+<label for="u">Usuario</label><input id="u" autocomplete="username" required>
+<label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required>
+<p class="err" id="le"></p><button class="btn" style="width:100%">Entrar</button>
+<p class="mut" style="margin-top:14px">Demo: <b>admin</b>, <b>dra.lopez</b> (médico), <b>qfb.ramirez</b> (químico), <b>recepcion</b> · contraseña <b>Ocac2026!</b></p>
+</form></section>
+<div id="app" hidden>
+<header><b>MonOCAC · Laboratorio clínico</b><span id="who"></span>
+<button class="btn sm" id="usrBtn" hidden>Usuarios</button><button class="btn sm" id="audBtn" hidden>Bitácora</button><button class="btn sm" id="out">Salir</button></header>
+<main>
+<div class="kpis" id="kpis"></div>
+<div class="bar"><input id="q" type="search" placeholder="Buscar por paciente, expediente, folio o análisis" aria-label="Buscar">
+<button class="btn" id="nuevo">+ Nueva orden</button></div>
+<div class="tw"><table><thead><tr><th>Folio</th><th>Paciente</th><th>Análisis</th><th>Prioridad</th><th>Estado</th><th>Solicitante</th><th>Acciones</th></tr></thead><tbody id="tb"></tbody></table></div>
+</main></div>
+<dialog id="dlg"></dialog>
+<script>
+const $=s=>document.querySelector(s),ES=['Recepcionado','Procesando','Validación','Entregado'],NEXT={Recepcionado:'Procesando',Procesando:'Validación',Validación:'Entregado'},PL={1:'Crítica',2:'Urgente',3:'Rutina'};
+let T=sessionStorage.t,U=JSON.parse(sessionStorage.u||'null'),CAT={},F='',O=[],ws,idle;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const can=(...r)=>r.includes(U?.rol);
+function toast(t,ok){const d=document.createElement('div');d.className='toast'+(ok?' ok':'');d.textContent=t;$('#toasts').append(d);setTimeout(()=>d.remove(),ok?3500:12000)}
+async function api(p,o={}){const r=await fetch('/api'+p,{...o,headers:{'Content-Type':'application/json',Authorization:'Bearer '+T}});
+ if(r.status==401){logout();throw Error('Sesión expirada')}const d=await r.json().catch(()=>({}));
+ if(!r.ok)throw Error(typeof d.detail=='string'?d.detail:'Revisa los datos capturados');return d}
+$('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
+ const r=await fetch('/api/auth/login',{method:'POST',body:new URLSearchParams({username:$('#u').value,password:$('#pw').value})});const d=await r.json();
+ if(!r.ok)return $('#le').textContent=d.detail;T=d.access_token;U=d;sessionStorage.t=T;sessionStorage.u=JSON.stringify(d);start()};
+function logout(){sessionStorage.clear();location.reload()}$('#out').onclick=logout;
+function bump(){clearTimeout(idle);idle=setTimeout(()=>{toast('Sesión cerrada por inactividad');setTimeout(logout,1500)},15*60e3)}
+['click','keydown'].forEach(e=>addEventListener(e,()=>T&&bump()));
+async function start(){if(!T)return;$('#login').hidden=true;$('#app').hidden=false;
+ $('#who').textContent=`${U.nombre} · ${U.rol}`;$('#audBtn').hidden=$('#usrBtn').hidden=!can('admin');bump();
+ CAT=await api('/catalogo');load();
+ ws=new WebSocket(`${location.protocol=='https:'?'wss':'ws'}://${location.host}/ws/alertas?token=${T}`);
+ ws.onmessage=e=>{const a=JSON.parse(e.data);toast(`⚠ ${a.mensaje} — ${a.paciente} (${a.folio})`);load()};setInterval(load,30000)}
+async function load(){try{const [o0,s]=await Promise.all([api(`/ordenes?q=${encodeURIComponent($('#q').value)}&estado=${F=='crit'?'':encodeURIComponent(F)}`),api('/stats')]);const o=F=='crit'?o0.filter(x=>x.prioridad==1&&x.estado!='Entregado'):o0;O=o;
+ $('#kpis').innerHTML=`<button class="kpi ${F?'':'on'}" data-f="">Todas<b>${s.total}</b></button>`+ES.map(x=>`<button class="kpi ${F==x?'on':''}" data-f="${x}">${x}<b>${s.estados[x]||0}</b></button>`).join('')+`<button class="kpi crit ${F=='crit'?'on':''}" data-f="crit">Críticas abiertas<b>${s.criticas}</b></button>`;
+ document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{F=b.dataset.f;load()});
+ $('#tb').innerHTML=o.length?o.map(x=>`<tr class="${x.critico?'c':''}"><td>${esc(x.folio)}</td><td><b>${esc(x.paciente)}</b><br><span class="mut">${esc(x.expediente)}</span></td><td>${esc(x.tipo_analisis)}<br><span class="mut">${esc(x.area)}</span></td>
+ <td><span class="tag p${x.prioridad}">${PL[x.prioridad]}</span></td><td>${x.estado}</td><td>${esc(x.solicitante)}</td><td><div class="acts">
+ <button class="btn sm sec" onclick="res(${x.id})">${can('admin','quimico')&&x.estado!='Entregado'?'Resultados':'Ver'}</button>
+ ${can('admin','quimico')&&NEXT[x.estado]?`<button class="btn sm" onclick="avanzar(${x.id},'${NEXT[x.estado]}')">→ ${NEXT[x.estado]}</button>`:''}
+ ${can('admin','medico','recepcion')&&x.estado!='Entregado'?`<button class="btn sm sec" onclick="formOrden(${x.id})">Editar</button>`:''}
+ ${['Validación','Entregado'].includes(x.estado)?`<button class="btn sm sec" onclick="pdf(${x.id})">PDF</button>`:''}
+ ${can('admin')?`<button class="btn sm red" onclick="del(${x.id})">Eliminar</button>`:''}</div></td></tr>`).join(''):'<tr><td colspan="7" class="empty">No hay órdenes con este filtro. Crea una con “Nueva orden”.</td></tr>'}catch(e){}}
+$('#q').oninput=()=>{clearTimeout(window.dq);window.dq=setTimeout(load,300)};
+function cerrar(){$('#dlg').close()}
+async function act(fn,msg){try{await fn();toast(msg,1);cerrar();load()}catch(e){toast(e.message)}}
+function avanzar(id,e){act(()=>api(`/ordenes/${id}/estado`,{method:'PUT',body:JSON.stringify({estado:e})}),'Estado actualizado: '+e)}
+function del(id){const x=O.find(o=>o.id==id);if(confirm(`¿Eliminar la orden ${x.folio} de ${x.paciente}?\nQuedará registrada en la bitácora.`))act(()=>api('/ordenes/'+id,{method:'DELETE'}),'Orden eliminada')}
+function formOrden(id){const x=id?O.find(o=>o.id==id):{sexo:'M',prioridad:3,solicitante:U.nombre,observaciones:''};
+ $('#dlg').innerHTML=`<h2 style="margin:0">${id?'Editar orden '+x.folio:'Nueva orden de análisis'}</h2><div class="g2">
+ <div><label>Expediente</label><input id="f_e" value="${esc(x.expediente)}" ${id?'readonly':''} placeholder="EXP-0007"></div>
+ <div><label>Nombre del paciente</label><input id="f_n" value="${esc(x.paciente)}"></div>
+ <div><label>Sexo</label><select id="f_s"><option value="M" ${x.sexo=='M'?'selected':''}>Masculino</option><option value="F" ${x.sexo=='F'?'selected':''}>Femenino</option></select></div>
+ <div><label>Fecha de nacimiento</label><input id="f_f" type="date" value="${x.fecha_nac||''}"></div>
+ <div><label>Análisis</label><select id="f_t">${Object.keys(CAT).map(k=>`<option ${x.tipo_analisis==k?'selected':''}>${k}</option>`).join('')}</select></div>
+ <div><label>Prioridad</label><select id="f_p">${[1,2,3].map(p=>`<option value="${p}" ${x.prioridad==p?'selected':''}>${PL[p]}</option>`).join('')}</select></div></div>
+ <label>Médico solicitante</label><input id="f_m" value="${esc(x.solicitante)}"><label>Observaciones clínicas</label><textarea id="f_o" rows="2">${esc(x.observaciones)}</textarea>
+ <div class="foot"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn" id="sv">Guardar orden</button></div>`;
+ $('#sv').onclick=()=>{const b={expediente:$('#f_e').value.trim(),nombre:$('#f_n').value.trim(),sexo:$('#f_s').value,fecha_nac:$('#f_f').value||null,tipo_analisis:$('#f_t').value,prioridad:+$('#f_p').value,solicitante:$('#f_m').value,observaciones:$('#f_o').value};
+  act(()=>api(id?'/ordenes/'+id:'/ordenes',{method:id?'PUT':'POST',body:JSON.stringify(b)}),id?'Orden actualizada':'Orden creada');};
+ $('#dlg').showModal()}
+$('#nuevo').onclick=()=>can('admin','medico','recepcion')?formOrden():toast('Tu rol no puede crear órdenes');
+function res(id){const x=O.find(o=>o.id==id),edit=can('admin','quimico')&&x.estado!='Entregado';
+ $('#dlg').innerHTML=`<h2 style="margin:0">${esc(x.tipo_analisis)}</h2><p class="mut">${esc(x.paciente)} · ${esc(x.folio)} · ${x.estado}${x.observaciones?'<br>Nota: '+esc(x.observaciones):''}</p>
+ ${Object.entries(x.analisis).map(([k,p])=>`<div class="row"><label style="margin:0" for="r_${esc(k)}">${esc(k)}<br><span class="mut">Ref. ${p.min}–${p.max} ${esc(p.u)}</span></label>
+ <input id="r_${esc(k)}" data-k="${esc(k)}" type="number" step="any" value="${p.valor??''}" ${edit?'':'disabled'}><span>${p.flag?`<span class="tag f-${p.flag}">${p.flag.toUpperCase()}</span>`:'<span class="mut">Pendiente</span>'}</span></div>`).join('')}
+ <div class="foot"><button class="btn sec" onclick="cerrar()">Cerrar</button>${edit?'<button class="btn" id="sr">Guardar resultados</button>':''}</div>`;
+ if(edit)$('#sr').onclick=()=>{const r={};document.querySelectorAll('[data-k]').forEach(i=>{if(i.value!=='')r[i.dataset.k]=+i.value});
+  act(()=>api(`/ordenes/${id}/resultados`,{method:'PUT',body:JSON.stringify({resultados:r})}),'Resultados guardados')};
+ $('#dlg').showModal()}
+$('#audBtn').onclick=async()=>{const a=await api('/auditoria');$('#dlg').innerHTML=`<h2 style="margin:0">Bitácora de auditoría</h2><div style="max-height:60vh;overflow:auto"><table style="min-width:0">${a.map(r=>`<tr><td class="mut">${new Date(r.fecha).toLocaleString('es-MX')}</td><td>${esc(r.usuario)}</td><td>${esc(r.accion)} ${esc(r.folio||'')}</td></tr>`).join('')}</table></div><div class="foot"><button class="btn sec" onclick="cerrar()">Cerrar</button></div>`;$('#dlg').showModal()};
+const nav=performance.getEntriesByType('navigation')[0];
+if(nav&&nav.type==='back_forward'&&sessionStorage.t){sessionStorage.clear();T=null;U=null}
+addEventListener('pageshow',e=>{if(e.persisted&&T)logout()});
+if(T)start();
+</script><script>
+async function blob(p){const r=await fetch(p,{headers:{Authorization:'Bearer '+T}});if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.detail||'No se pudo generar')}return r.blob()}
+async function pdf(id){const w=window.open('','_blank');try{w.location=URL.createObjectURL(await blob(`/api/ordenes/${id}/pdf`))}catch(e){w.close();toast(e.message)}}
+async function fhir(id){try{const a=document.createElement('a');a.href=URL.createObjectURL(await blob(`/api/ordenes/${id}/fhir`));a.download='fhir-orden-'+id+'.json';a.click()}catch(e){toast(e.message)}}
+function spark(pts,p){const W=300,H=64,v=pts.map(x=>x.valor),lo=Math.min(...v,p.min),hi=Math.max(...v,p.max),r=(hi-lo)||1,y=n=>H-6-(n-lo)/r*(H-12),x=i=>pts.length>1?8+i*(W-16)/(pts.length-1):W/2;
+ return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Tendencia"><rect x="0" y="${y(p.max)}" width="${W}" height="${Math.max(2,y(p.min)-y(p.max))}" fill="#e2f1ef"/><polyline fill="none" stroke="#0e6b64" stroke-width="2" points="${pts.map((q,i)=>x(i)+','+y(q.valor)).join(' ')}"/>${pts.map((q,i)=>`<circle cx="${x(i)}" cy="${y(q.valor)}" r="${i==pts.length-1?5:3}" fill="${i==pts.length-1?'#10302f':'#0e6b64'}"><title>${q.valor} · ${new Date(q.fecha).toLocaleDateString('es-MX')}</title></circle>`).join('')}</svg>`}
+const _res=res;res=async function(id){_res(id);const x=O.find(o=>o.id==id),f=$('#dlg .foot');
+ if(x.estado!='Recepcionado')f.insertAdjacentHTML('afterbegin',`<button class="btn sec" onclick="pdf(${id})">PDF</button><button class="btn sec" onclick="fhir(${id})">FHIR</button>`);
+ try{const h=await api(`/ordenes/${id}/historial`),P=CAT[x.tipo_analisis].params;
+  const t=Object.entries(h.series).filter(([k,s])=>s.length>1).map(([k,s])=>{const d=h.delta[k];return `<div style="margin-top:10px"><b>${esc(k)}</b> <span class="mut">${s.length} resultados · ${esc(P[k].u)}</span>${d?` <span class="tag f-crítico">Δ ${d.pct>0?'+':''}${d.pct}% vs ${new Date(d.fecha).toLocaleDateString('es-MX')}</span>`:''}${spark(s,P[k])}</div>`}).join('');
+  if(t)f.insertAdjacentHTML('beforebegin',`<h3 style="margin:16px 0 0">Tendencia del paciente</h3>${t}`)}catch(e){}};
+$('#usrBtn').onclick=users;
+async function users(){const L=await api('/usuarios');window.UL=L;
+ $('#dlg').innerHTML=`<h2 style="margin:0">Usuarios del sistema</h2><table style="min-width:0">${L.map(x=>`<tr><td><b>${esc(x.nombre)}</b><br><span class="mut">${esc(x.username)} · ${x.rol}${x.activo?'':' · inactivo'}</span></td><td><button class="btn sm sec" onclick="uform(${x.id})">Editar</button></td></tr>`).join('')}</table><div class="foot"><button class="btn sec" onclick="cerrar()">Cerrar</button><button class="btn" onclick="uform()">+ Nuevo usuario</button></div>`;
+ if(!$('#dlg').open)$('#dlg').showModal()}
+function uform(id){const x=id?UL.find(u=>u.id==id):{rol:'medico',activo:true};
+ $('#dlg').innerHTML=`<h2 style="margin:0">${id?'Editar usuario':'Nuevo usuario'}</h2><label>Usuario (minúsculas, sin espacios)</label><input id="u_u" value="${esc(x.username)}" ${id?'readonly':''}><label>Nombre completo</label><input id="u_n" value="${esc(x.nombre)}"><label>Rol</label><select id="u_r">${['medico','quimico','recepcion','admin'].map(r=>`<option ${x.rol==r?'selected':''}>${r}</option>`).join('')}</select><label>${id?'Nueva contraseña (vacío = no cambiar)':'Contraseña (mínimo 8 caracteres)'}</label><input id="u_p" type="password" autocomplete="new-password"><label style="display:flex;gap:8px;align-items:center"><input id="u_a" type="checkbox" style="width:auto" ${x.activo?'checked':''}>Cuenta activa</label><div class="foot"><button class="btn sec" onclick="users()">Volver</button><button class="btn" id="u_s">Guardar usuario</button></div>`;
+ $('#u_s').onclick=async()=>{try{await api(id?'/usuarios/'+id:'/usuarios',{method:id?'PUT':'POST',body:JSON.stringify({username:$('#u_u').value.trim(),nombre:$('#u_n').value.trim(),rol:$('#u_r').value,password:$('#u_p').value||null,activo:$('#u_a').checked})});toast('Usuario guardado',1);users()}catch(e){toast(e.message)}}}
+</script></body></html>
