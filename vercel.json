@@ -1,0 +1,1 @@
+{"$schema":"https://openapi.vercel.sh/vercel.json","functions":{"main.py":{"excludeFiles":"{venv/**,__pycache__/**}","maxDuration":60}}}
