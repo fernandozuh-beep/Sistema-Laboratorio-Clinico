@@ -25,6 +25,8 @@ table{width:100%;border-collapse:collapse;min-width:820px}th,td{text-align:left;
 th{font-size:14px;color:var(--mut);background:#f8fbfa}tr.c td:first-child{border-left:5px solid var(--red)}
 .tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:700}
 .p1{background:var(--red2);color:var(--red)}.p2{background:var(--amb2);color:var(--amb)}.p3{background:#e9eeed;color:var(--mut)}
+.e0{background:#e9eeed;color:var(--mut)}.e1{background:var(--amb2);color:var(--amb)}.e2{background:#d7e8f5;color:#17557a}.e3{background:var(--teal);color:#fff}
+.btn[disabled]{opacity:.55;cursor:wait}
 .f-crítico{background:var(--red);color:#fff}.f-alto,.f-bajo{background:var(--amb2);color:var(--amb)}.f-normal{background:var(--teal2);color:var(--teal)}
 .acts{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:34px;text-align:center;color:var(--mut)}
 dialog{border:0;border-radius:10px;padding:22px;width:min(560px,94vw);box-shadow:0 10px 40px #0005}dialog::backdrop{background:#0a1f1e99}
@@ -41,7 +43,6 @@ dialog{border:0;border-radius:10px;padding:22px;width:min(560px,94vw);box-shadow
 <label for="u">Usuario</label><input id="u" autocomplete="username" required>
 <label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required>
 <p class="err" id="le"></p><button class="btn" style="width:100%">Entrar</button>
-<p class="mut" style="margin-top:14px">Demo: <b>admin</b>, <b>dra.lopez</b> (médico), <b>qfb.ramirez</b> (químico), <b>recepcion</b> · contraseña <b>Ocac2026!</b></p>
 </form></section>
 <div id="app" hidden>
 <header><b>MonOCAC · Laboratorio clínico</b><span id="who"></span>
@@ -50,7 +51,7 @@ dialog{border:0;border-radius:10px;padding:22px;width:min(560px,94vw);box-shadow
 <div class="kpis" id="kpis"></div>
 <div class="bar"><input id="q" type="search" placeholder="Buscar por paciente, expediente, folio o análisis" aria-label="Buscar">
 <button class="btn" id="nuevo">+ Nueva orden</button></div>
-<div class="tw"><table><thead><tr><th>Folio</th><th>Paciente</th><th>Análisis</th><th>Prioridad</th><th>Estado</th><th>Solicitante</th><th>Acciones</th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="tw"><table><thead><tr><th>Folio</th><th>Paciente</th><th>Análisis</th><th>Prioridad</th><th>Estado</th><th>Solicitante</th><th>Recibida</th><th>Acciones</th></tr></thead><tbody id="tb"></tbody></table></div>
 </main></div>
 <dialog id="dlg"></dialog>
 <script>
@@ -69,23 +70,27 @@ function logout(){sessionStorage.clear();location.reload()}$('#out').onclick=log
 function bump(){clearTimeout(idle);idle=setTimeout(()=>{toast('Sesión cerrada por inactividad');setTimeout(logout,1500)},15*60e3)}
 ['click','keydown'].forEach(e=>addEventListener(e,()=>T&&bump()));
 async function start(){if(!T)return;$('#login').hidden=true;$('#app').hidden=false;
- $('#who').textContent=`${U.nombre} · ${U.rol}`;$('#audBtn').hidden=$('#usrBtn').hidden=!can('admin');bump();
+ $('#who').textContent=`${U.nombre} · ${U.rol}`;$('#audBtn').hidden=$('#usrBtn').hidden=!can('admin');$('#nuevo').hidden=!can('admin','medico','recepcion');bump();
  CAT=await api('/catalogo');load();
  ws=new WebSocket(`${location.protocol=='https:'?'wss':'ws'}://${location.host}/ws/alertas?token=${T}`);
  ws.onmessage=e=>{const a=JSON.parse(e.data);toast(`⚠ ${a.mensaje} — ${a.paciente} (${a.folio})`);load()};setInterval(load,30000)}
-async function load(){try{const [o0,s]=await Promise.all([api(`/ordenes?q=${encodeURIComponent($('#q').value)}&estado=${F=='crit'?'':encodeURIComponent(F)}`),api('/stats')]);const o=F=='crit'?o0.filter(x=>x.prioridad==1&&x.estado!='Entregado'):o0;O=o;
+function recibida(x){const d=new Date(x.creado),mins=Math.max(0,Math.round((Date.now()-d)/6e4));
+ const rel=mins<1?'ahora':mins<60?`hace ${mins} min`:mins<1440?`hace ${Math.floor(mins/60)} h${mins%60?' '+mins%60+' min':''}`:`hace ${Math.floor(mins/1440)} d`;
+ const tarde=x.prioridad==1&&x.estado!='Entregado'&&mins>=120;
+ return `${d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}<br>${tarde?`<span class="tag p1">⚠ ${rel}</span>`:`<span class="mut">${rel}</span>`}`}
+async function load(){if(!O.length)$('#tb').innerHTML='<tr><td colspan="8" class="empty">Cargando órdenes…</td></tr>';try{const [o0,s]=await Promise.all([api(`/ordenes?q=${encodeURIComponent($('#q').value)}&estado=${F=='crit'?'':encodeURIComponent(F)}`),api('/stats')]);const o=F=='crit'?o0.filter(x=>x.prioridad==1&&x.estado!='Entregado'):o0;O=o;
  $('#kpis').innerHTML=`<button class="kpi ${F?'':'on'}" data-f="">Todas<b>${s.total}</b></button>`+ES.map(x=>`<button class="kpi ${F==x?'on':''}" data-f="${x}">${x}<b>${s.estados[x]||0}</b></button>`).join('')+`<button class="kpi crit ${F=='crit'?'on':''}" data-f="crit">Críticas abiertas<b>${s.criticas}</b></button>`;
  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{F=b.dataset.f;load()});
- $('#tb').innerHTML=o.length?o.map(x=>`<tr class="${x.critico?'c':''}"><td>${esc(x.folio)}</td><td><b>${esc(x.paciente)}</b><br><span class="mut">${esc(x.expediente)}</span></td><td>${esc(x.tipo_analisis)}<br><span class="mut">${esc(x.area)}</span></td>
- <td><span class="tag p${x.prioridad}">${PL[x.prioridad]}</span></td><td>${x.estado}</td><td>${esc(x.solicitante)}</td><td><div class="acts">
+ $('#tb').innerHTML=o.length?o.map(x=>`<tr class="${x.critico||(x.prioridad==1&&x.estado!='Entregado')?'c':''}"><td>${esc(x.folio)}</td><td><b>${esc(x.paciente)}</b><br><span class="mut">${esc(x.expediente)}</span></td><td>${esc(x.tipo_analisis)}<br><span class="mut">${esc(x.area)}</span></td>
+ <td><span class="tag p${x.prioridad}">${PL[x.prioridad]}</span></td><td><span class="tag e${ES.indexOf(x.estado)}">${x.estado}</span></td><td>${esc(x.solicitante)}</td><td>${recibida(x)}</td><td><div class="acts">
  <button class="btn sm sec" onclick="res(${x.id})">${can('admin','quimico')&&x.estado!='Entregado'?'Resultados':'Ver'}</button>
  ${can('admin','quimico')&&NEXT[x.estado]?`<button class="btn sm" onclick="avanzar(${x.id},'${NEXT[x.estado]}')">→ ${NEXT[x.estado]}</button>`:''}
  ${can('admin','medico','recepcion')&&x.estado!='Entregado'?`<button class="btn sm sec" onclick="formOrden(${x.id})">Editar</button>`:''}
  ${['Validación','Entregado'].includes(x.estado)?`<button class="btn sm sec" onclick="pdf(${x.id})">PDF</button>`:''}
- ${can('admin')?`<button class="btn sm red" onclick="del(${x.id})">Eliminar</button>`:''}</div></td></tr>`).join(''):'<tr><td colspan="7" class="empty">No hay órdenes con este filtro. Crea una con “Nueva orden”.</td></tr>'}catch(e){}}
+ ${can('admin')?`<button class="btn sm red" onclick="del(${x.id})">Eliminar</button>`:''}</div></td></tr>`).join(''):'<tr><td colspan="8" class="empty">No hay órdenes con este filtro. Crea una con “Nueva orden”.</td></tr>'}catch(e){if(!O.length)$('#tb').innerHTML='<tr><td colspan="8" class="empty">No se pudieron cargar las órdenes. <button class="btn sm sec" onclick="load()">Reintentar</button></td></tr>';toast('No se pudieron cargar las órdenes: '+e.message)}}
 $('#q').oninput=()=>{clearTimeout(window.dq);window.dq=setTimeout(load,300)};
 function cerrar(){$('#dlg').close()}
-async function act(fn,msg){try{await fn();toast(msg,1);cerrar();load()}catch(e){toast(e.message)}}
+async function act(fn,msg){if(act.busy)return;act.busy=true;try{await fn();toast(msg,1);cerrar();load()}catch(e){toast(e.message)}finally{act.busy=false}}
 function avanzar(id,e){act(()=>api(`/ordenes/${id}/estado`,{method:'PUT',body:JSON.stringify({estado:e})}),'Estado actualizado: '+e)}
 function del(id){const x=O.find(o=>o.id==id);if(confirm(`¿Eliminar la orden ${x.folio} de ${x.paciente}?\nQuedará registrada en la bitácora.`))act(()=>api('/ordenes/'+id,{method:'DELETE'}),'Orden eliminada')}
 function formOrden(id){const x=id?O.find(o=>o.id==id):{sexo:'M',prioridad:3,solicitante:U.nombre,observaciones:''};
