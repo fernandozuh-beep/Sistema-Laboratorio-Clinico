@@ -121,7 +121,7 @@ def pdf(id: int, db=Depends(get_db), u=Depends(sec.user)):
     if not o.resultados: raise HTTPException(422, "La orden aún no tiene resultados")
     val = db.query(m.Auditoria).filter(m.Auditoria.folio == o.folio, m.Auditoria.accion == "Estado → Entregado").first()
     S, p = getSampleStyleSheet(), o.paciente
-    el = [Paragraph(f"<b>{HOSPITAL}</b> · Laboratorio clínico", S["Title"]),
+    el = [Paragraph(f"<b>{HOSPITAL}</b> · Laboratorio clínico · MonOCAC", S["Title"]),
           Paragraph(f"<b>Paciente:</b> {p.nombre} &nbsp; <b>Expediente:</b> {p.expediente} &nbsp; <b>Sexo:</b> {p.sexo} &nbsp; <b>Nac.:</b> {p.fecha_nac or '—'}", S["Normal"]),
           Paragraph(f"<b>Folio:</b> {o.folio} &nbsp; <b>Estudio:</b> {o.tipo_analisis} &nbsp; <b>Solicitante:</b> {o.solicitante or '—'}", S["Normal"])]
     if o.estado != "Entregado":

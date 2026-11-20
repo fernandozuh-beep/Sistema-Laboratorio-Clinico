@@ -1,0 +1,28 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Configuración y secretos locales
+.env
+.env.*
+
+# Bases de datos locales
+*.db
+*.sqlite
+*.sqlite3
+
+# Despliegue
+.vercel
+
+# Sistema operativo / editores
+.DS_Store
+.idea/
+.vscode/

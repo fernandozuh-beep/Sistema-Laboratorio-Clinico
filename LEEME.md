@@ -1,3 +1,7 @@
+# LEEME
+
+> La documentación principal del proyecto está en [README.md](README.md).
+
 # OCAC - Instalación rápida
 1. Borra y vuelve a crear la base `ocac_db` en pgAdmin (el esquema cambió).
 2. Edita la línea `URL` de models.py con tu contraseña de PostgreSQL.
