@@ -4,7 +4,11 @@ Sistema web para gestionar las órdenes de un laboratorio clínico: clasifica, o
 
 **Demo en vivo:** https://sistema-laboratorio-clinico.vercel.app
 
-<!-- Capturas: docs/captura-login.png y docs/captura-panel.png -->
+## Capturas
+
+![Pantalla de inicio de sesión](readme-login.png)
+
+![Panel de órdenes con alertas críticas](readme-panel.png)
 
 ## Qué hace
 
