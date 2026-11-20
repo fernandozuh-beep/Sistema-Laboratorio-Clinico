@@ -146,19 +146,21 @@ class UserIn(BaseModel):
     username: str = Field(pattern="^[a-z0-9._-]{3,50}$")
     nombre: str = Field(min_length=3, max_length=100)
     rol: str = Field(pattern="^(admin|medico|quimico|recepcion)$")
+    especialidad: str = ""
     password: str | None = Field(None, min_length=8)
     activo: bool = True
 
 @router.get("/api/usuarios")
 def usuarios(db=Depends(get_db), u=Depends(sec.roles("admin"))):
-    return [{"id": x.id, "username": x.username, "nombre": x.nombre, "rol": x.rol, "activo": x.activo}
+    return [{"id": x.id, "username": x.username, "nombre": x.nombre, "rol": x.rol,
+             "especialidad": x.especialidad or "", "activo": x.activo}
             for x in db.query(m.Usuario).order_by(m.Usuario.id)]
 
 @router.post("/api/usuarios", status_code=201)
 def crear_usuario(d: UserIn, db=Depends(get_db), u=Depends(sec.roles("admin"))):
     if not d.password: raise HTTPException(422, "La contraseña es obligatoria (mínimo 8 caracteres)")
     if db.query(m.Usuario).filter_by(username=d.username).first(): raise HTTPException(409, "Ese usuario ya existe")
-    db.add(m.Usuario(username=d.username, nombre=d.nombre, rol=d.rol, activo=d.activo, hashed_password=sec.hash_pw(d.password)))
+    db.add(m.Usuario(username=d.username, nombre=d.nombre, rol=d.rol, especialidad=d.especialidad, activo=d.activo, hashed_password=sec.hash_pw(d.password)))
     _M().audit(db, u["sub"], f"Usuario creado: {d.username} ({d.rol})"); db.commit()
     return {"ok": True}
 
@@ -169,6 +171,7 @@ def editar_usuario(id: int, d: UserIn, db=Depends(get_db), u=Depends(sec.roles("
     if x.username == u["sub"] and (not d.activo or d.rol != "admin"):
         raise HTTPException(422, "No puedes desactivarte ni quitarte el rol admin a ti mismo")
     x.nombre, x.rol, x.activo, x.intentos, x.bloqueado_hasta = d.nombre, d.rol, d.activo, 0, None
+    x.especialidad = d.especialidad
     if d.password: x.hashed_password = sec.hash_pw(d.password)
     _M().audit(db, u["sub"], f"Usuario editado: {x.username} ({d.rol}, {'activo' if d.activo else 'inactivo'})"); db.commit()
     return {"ok": True}

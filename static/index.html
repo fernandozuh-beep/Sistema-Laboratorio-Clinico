@@ -1,73 +1,205 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MonOCAC · Laboratorio clínico</title>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('ocac-theme')||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#10302f;--bg:#f3f6f5;--card:#fff;--line:#d7e0de;--teal:#0e6b64;--teal2:#e2f1ef;--red:#c62828;--red2:#fde8e8;--amb:#b26a00;--amb2:#fff1d6;--mut:#5b6f6d}
-[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+:root{--bg:#f6f7fb;--card:#fff;--card2:#fbfcfe;--ink:#1e2433;--mut:#8a93a8;--line:#e7eaf2;--line2:#eef1f6;
+--acc:#4f46e5;--acc2:#6366f1;--acc-soft:#eef2ff;--teal:#0e7c86;--teal-soft:#e2f1ef;
+--red:#b91c1c;--red-solid:#dc2626;--red-bg:#fee2e2;--alert-bg:#fff5f5;--alert-bd:#fecdd3;--crit-bg:#fff8f8;
+--amb:#b45309;--amb-bg:#fef3c7;--grn:#15803d;--grn-bg:#dcfce7;--blu:#1d4ed8;--blu-bg:#dbeafe;--gry-bg:#f1f5f9;--gry:#64748b;
+--input:#fff;--shadow:0 2px 10px rgba(30,36,51,.05);--dlg-shadow:0 10px 40px #0005;--backdrop:#0a1f1e99}
+[data-theme="dark"]{--bg:#0a1120;--card:#0d1830;--card2:#0a1428;--ink:#dbe7f3;--mut:#7d94b5;--line:#1c2f52;--line2:#14233f;
+--acc:#0891b2;--acc2:#22d3ee;--acc-soft:#132341;--teal:#2dd4bf;--teal-soft:#123b3a;
+--red:#fda4af;--red-solid:#e11d48;--red-bg:rgba(244,63,94,.16);--alert-bg:rgba(244,63,94,.07);--alert-bd:#7f1d2d;--crit-bg:rgba(244,63,94,.06);
+--amb:#fcd34d;--amb-bg:rgba(245,158,11,.15);--grn:#6ee7b7;--grn-bg:rgba(16,185,129,.16);--blu:#93c5fd;--blu-bg:rgba(59,130,246,.18);--gry-bg:#16294d;--gry:#a8c3e8;
+--input:#0a1428;--shadow:0 2px 10px rgba(0,0,0,.35);--dlg-shadow:0 10px 40px #000a;--backdrop:#020617cc}
+[hidden]{display:none!important}*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
 button,input,select,textarea{font:inherit;color:inherit}:focus-visible{outline:3px solid #f2a900;outline-offset:2px}
-.btn{border:1px solid var(--teal);background:var(--teal);color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer}
-.btn.sec{background:#fff;color:var(--teal)}.btn.red{background:var(--red);border-color:var(--red)}.btn.sm{padding:4px 10px;font-size:14px}
-input,select,textarea{width:100%;padding:9px 10px;border:1px solid #aebdbb;border-radius:6px;background:#fff}
-label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
-#login{min-height:100vh;display:grid;place-items:center;padding:20px}
-.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:28px;width:min(380px,100%)}
-.box h1{margin:0 0 4px;font-size:26px}.mut{color:var(--mut);font-size:14px}.err{color:var(--red);min-height:22px;font-size:14px}
-header{background:var(--ink);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 20px;flex-wrap:wrap}
-header b{font-size:20px;margin-right:auto}header .btn{background:transparent;border-color:#6d908c}
-main{max-width:1250px;margin:0 auto;padding:18px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.kpi{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:6px;padding:10px 14px;cursor:pointer;text-align:left}
-.kpi.on{background:var(--teal2)}.kpi.crit{border-left-color:var(--red)}.kpi b{font-size:28px;display:block}
-.bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bar input{flex:1;min-width:220px}
-.tw{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:820px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-size:14px;color:var(--mut);background:#f8fbfa}tr.c td:first-child{border-left:5px solid var(--red)}
-.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:700}
-.p1{background:var(--red2);color:var(--red)}.p2{background:var(--amb2);color:var(--amb)}.p3{background:#e9eeed;color:var(--mut)}
-.e0{background:#e9eeed;color:var(--mut)}.e1{background:var(--amb2);color:var(--amb)}.e2{background:#d7e8f5;color:#17557a}.e3{background:var(--teal);color:#fff}
+.btn{border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:10px;padding:9px 15px;cursor:pointer;font-weight:600}
+.btn.sec{background:var(--card);color:var(--acc);border-color:var(--line)}
+.btn.red{background:var(--red-solid);border-color:var(--red-solid);color:#fff}
+.btn.sm{padding:5px 11px;font-size:14px;border-radius:8px}
 .btn[disabled]{opacity:.55;cursor:wait}
-.f-crítico{background:var(--red);color:#fff}.f-alto,.f-bajo{background:var(--amb2);color:var(--amb)}.f-normal{background:var(--teal2);color:var(--teal)}
-.acts{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:34px;text-align:center;color:var(--mut)}
-dialog{border:0;border-radius:10px;padding:22px;width:min(560px,94vw);box-shadow:0 10px 40px #0005}dialog::backdrop{background:#0a1f1e99}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--input)}
+label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
+.mut{color:var(--mut);font-size:14px}.err{color:var(--red);min-height:22px;font-size:14px}
+/* ---------- Login (pantalla dividida) ---------- */
+#login{min-height:100vh}
+.login-split{display:flex;min-height:100vh}
+.lg-left{width:55%;background:linear-gradient(150deg,#0b5563 0%,#0e7c86 45%,#4f46e5 130%);color:#fff;padding:56px 64px;display:flex;flex-direction:column}
+.lg-left h1{font-size:42px;margin:32px 0 0;line-height:1.12}
+.lg-left .lead{font-size:18px;opacity:.88;margin-top:14px;line-height:1.55;max-width:520px}
+.feats{margin-top:42px;display:flex;flex-direction:column;gap:18px}
+.feat{display:flex;gap:14px;align-items:flex-start}
+.feat .ic{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:19px;flex:none}
+.feat b{font-size:16px}.feat span{display:block;font-size:14px;opacity:.82;margin-top:2px;line-height:1.45}
+.lg-left .lfoot{margin-top:auto;font-size:13px;opacity:.65;padding-top:30px}
+.lg-right{flex:1;background:var(--card);display:flex;align-items:center;justify-content:center;padding:24px}
+.login-form{width:min(380px,100%)}
+.login-form h2{font-size:27px;margin:0}
+.login-form .sub{color:var(--mut);font-size:14.5px;margin:8px 0 18px}
+.login-form .btn{width:100%;padding:13px;font-size:16px;border-radius:12px;box-shadow:0 8px 20px rgba(79,70,229,.25)}
+.note{margin-top:24px;background:var(--gry-bg);border-radius:11px;padding:12px 15px;font-size:12.5px;color:var(--mut);line-height:1.5}
+.logobox{position:relative;border:2px dashed #a5b4fc;background:#eef2ff;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.logobox .lg-fb{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#4f46e5;font-weight:800;line-height:1.15;text-align:center}
+.logobox img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--card)}
+.lg-left .logobox{width:84px;height:84px;border-radius:22px;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.12)}
+.lg-left .logobox .lg-fb{color:#fff;font-size:13px}
+/* ---------- Estructura de la app ---------- */
+.shell{display:flex;min-height:100vh}
+#side{width:88px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:8px;position:sticky;top:0;height:100vh;flex:none;z-index:5}
+#side .logobox{width:56px;height:56px;margin-bottom:14px}
+#side .logobox .lg-fb{font-size:10px}
+.nav-it{width:58px;min-height:56px;border:0;background:none;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--mut);font-size:10px;cursor:pointer;padding:6px 0}
+.nav-it .ic{font-size:20px;line-height:1}
+.nav-it.on{background:var(--acc-soft);color:var(--acc);font-weight:700}
+.nav-it:hover{background:var(--acc-soft)}
+.side-bot{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.side-av{width:42px;height:42px;border-radius:50%;background:var(--acc2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.wrap{flex:1;padding:22px 20px;min-width:0}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.top h1{font-size:24px;font-weight:800;margin:0}
+.top p{color:var(--mut);font-size:13px;margin:2px 0 0}
+.top .sp{flex:1}
+.top .search{width:250px;background:var(--card)}
+.rolchip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 14px 6px 7px}
+.rolchip .av{width:36px;height:36px;border-radius:50%;background:var(--acc2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.rolchip b{font-size:14px;display:block;line-height:1.15}
+.rolchip span{font-size:12px;color:var(--acc);font-weight:600}
+.icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center}
+.btn-new{border:1px solid var(--acc);background:var(--acc);color:#fff;font-weight:700;padding:12px 18px;border-radius:12px;font-size:14.5px;cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.25)}
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 17px;cursor:pointer;text-align:left;box-shadow:var(--shadow);color:var(--ink)}
+.kpi b{font-size:26px;display:block;line-height:1.1}
+.kpi span{font-size:12.5px;color:var(--mut)}
+.kpi.on{outline:2px solid var(--acc);background:var(--acc-soft)}
+.kpi.crit b{color:var(--red)}
+/* ---------- Contenido: tabla + alertas ---------- */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:6px}
+.filters{display:flex;gap:10px;align-items:center;padding:11px 13px;flex-wrap:wrap}
+.filters label{margin:0}
+.filters select{width:auto;background:var(--card2)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:680px}
+th,td{text-align:left;padding:10px 9px;border-bottom:1px solid var(--line2);vertical-align:middle}
+th{font-size:12.5px;color:var(--mut);font-weight:600}
+tr.c td{background:var(--crit-bg)}
+.who{display:flex;align-items:center;gap:8px}
+.av2{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex:none}
+.pac small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.folio{font-weight:700;color:var(--acc);font-size:12.5px;white-space:nowrap}
+.tag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.p1{background:var(--red-bg);color:var(--red)}.p2{background:var(--amb-bg);color:var(--amb)}.p3{background:var(--gry-bg);color:var(--gry)}
+.e0{background:var(--gry-bg);color:var(--gry)}.e1{background:var(--amb-bg);color:var(--amb)}.e2{background:var(--blu-bg);color:var(--blu)}.e3{background:var(--teal);color:#fff}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.st i{width:8px;height:8px;border-radius:50%;flex:none}
+.f-crítico{background:var(--red-solid);color:#fff}.f-alto,.f-bajo{background:var(--amb-bg);color:var(--amb)}.f-normal{background:var(--teal-soft);color:var(--teal)}
+.acts{display:flex;gap:7px;flex-wrap:nowrap;justify-content:flex-end}
+.b1{background:var(--acc);color:#fff;border:1px solid var(--acc);padding:7px 9px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.b2{background:var(--card);border:1px solid var(--line);padding:7px 9px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);white-space:nowrap}
+.b3{background:var(--card);border:1px solid var(--line);width:31px;border-radius:10px;color:var(--mut);font-size:15px;cursor:pointer}
+.empty{padding:34px;text-align:center;color:var(--mut)}
+.pgbar{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:11px 13px}
+/* ---------- Panel de alertas ---------- */
+.alerts-card{background:var(--card);border:1px solid var(--alert-bd);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+.alerts-card h2{color:var(--red);font-size:14.5px;text-transform:uppercase;letter-spacing:.7px;margin:0}
+.alerts-card .sub{color:var(--mut);font-size:12.5px;margin:4px 0 13px}
+.alert{border:1px solid var(--alert-bd);background:var(--alert-bg);border-radius:12px;padding:13px 14px;margin-bottom:11px}
+.alert b{font-size:14.5px}.alert .v{color:var(--red);font-weight:800;font-size:16px}
+.alert small{color:var(--mut);display:block;margin-top:3px;font-size:12px;line-height:1.45}
+.alert .go{margin-top:9px;background:var(--red-solid);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12.5px;font-weight:700;width:100%;cursor:pointer}
+.okbox{border:1.5px dashed var(--line);border-radius:11px;padding:11px 13px;color:var(--mut);font-size:12.5px;line-height:1.5}
+.live{display:flex;align-items:center;gap:7px;color:var(--grn);font-size:12.5px;font-weight:700;margin-top:12px}
+.live .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 9px #22c55e;flex:none}
+.live.off{color:var(--mut)}.live.off .dot{background:var(--mut);box-shadow:none}
+/* ---------- Diálogos, menú, toasts ---------- */
+dialog{background:var(--card);color:var(--ink);border:0;border-radius:16px;padding:22px;width:min(560px,94vw);box-shadow:var(--dlg-shadow)}
+dialog::backdrop{background:var(--backdrop)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.row{display:grid;grid-template-columns:1fr 110px 120px;gap:8px;align-items:center;margin:8px 0}
 .foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-#toasts{position:fixed;top:14px;right:14px;display:grid;gap:8px;z-index:9;width:min(360px,92vw)}
-.toast{background:var(--red);color:#fff;padding:12px 14px;border-radius:8px;box-shadow:0 4px 18px #0004}
-.toast.ok{background:var(--teal)}
-.bar label{margin:0}.bar select{width:auto}
-.menu{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px #0004;padding:4px;min-width:160px;z-index:20;display:grid}
-.menu button{background:none;border:0;text-align:left;padding:8px 12px;border-radius:6px;cursor:pointer}
-.menu button:hover,.menu button:focus-visible{background:var(--teal2)}
+#toasts{position:fixed;top:14px;right:14px;display:grid;gap:8px;z-index:50;width:min(360px,92vw)}
+.toast{background:var(--red-solid);color:#fff;padding:12px 14px;border-radius:10px;box-shadow:0 4px 18px #0004}
+.toast.ok{background:#0e7c86}
+.menu{position:fixed;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px #0004;padding:4px;min-width:160px;z-index:60;display:grid}
+.menu button{background:none;border:0;text-align:left;padding:8px 12px;border-radius:6px;cursor:pointer;color:inherit}
+.menu button:hover,.menu button:focus-visible{background:var(--acc-soft)}
 .menu button.danger{color:var(--red)}
 .ferr{color:var(--red);font-size:13px;margin:2px 0 0}
-@media(max-width:600px){.g2{grid-template-columns:1fr}.row{grid-template-columns:1fr;gap:2px;margin:12px 0}}
+@media(max-width:1100px){.cols{grid-template-columns:1fr}}
+@media(max-width:820px){.login-split{flex-direction:column}.lg-left{width:100%;padding:34px 28px}.lg-left h1{font-size:32px}.feats{display:none}}
+@media(max-width:600px){.g2{grid-template-columns:1fr}.row{grid-template-columns:1fr;gap:2px;margin:12px 0}
+ #side{width:64px}.nav-it{width:48px;font-size:9px}.wrap{padding:16px 12px}.top .search{width:100%;order:5}}
 </style></head><body>
 <div id="toasts" role="alert" aria-live="assertive"></div>
-<section id="login"><form class="box" id="lf">
-<h1>MonOCAC</h1><p class="mut">Laboratorio clínico · acceso del personal</p>
-<label for="u">Usuario</label><input id="u" autocomplete="username" required>
-<label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required>
-<p class="err" id="le"></p><button class="btn" style="width:100%">Entrar</button>
-</form></section>
-<div id="app" hidden>
-<header><b>MonOCAC · Laboratorio clínico</b><span id="who"></span>
-<button class="btn sm" id="usrBtn" hidden>Usuarios</button><button class="btn sm" id="audBtn" hidden>Bitácora</button><button class="btn sm" id="out">Salir</button></header>
-<main>
+<section id="login"><div class="login-split">
+<div class="lg-left">
+  <div class="logobox"><span class="lg-fb"><span style="font-size:30px">🧪</span>LOGO</span><img src="/logo.png" alt="Logo" onerror="this.remove()"></div>
+  <h1>MonOCAC<br>Laboratorio Clínico</h1>
+  <p class="lead">Órdenes, resultados y alertas críticas del laboratorio en un solo lugar, en tiempo real.</p>
+  <div class="feats">
+    <div class="feat"><span class="ic">🚨</span><div><b>Alertas críticas al instante</b><span>Los valores fuera de rango se notifican en cuanto el analizador los reporta.</span></div></div>
+    <div class="feat"><span class="ic">🔬</span><div><b>Flujo por estados</b><span>Recepción, proceso, validación y entrega con trazabilidad completa.</span></div></div>
+    <div class="feat"><span class="ic">📄</span><div><b>Reportes PDF y FHIR</b><span>Resultados listos para el expediente y para interoperar con otros sistemas.</span></div></div>
+  </div>
+  <div class="lfoot">Hospital General · Sistema interno de laboratorio</div>
+</div>
+<div class="lg-right"><form class="login-form" id="lf">
+  <h2>Bienvenido de nuevo</h2><p class="sub">Inicia sesión con tu cuenta del laboratorio.</p>
+  <label for="u">Usuario</label><input id="u" autocomplete="username" required placeholder="ej. dra.lopez">
+  <label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required placeholder="Tu contraseña">
+  <p class="err" id="le"></p><button class="btn">Entrar al panel →</button>
+  <div class="note">🔒 Acceso exclusivo para personal autorizado. Los intentos de acceso quedan registrados en la bitácora.</div>
+</form></div>
+</div></section>
+<div id="app" hidden><div class="shell">
+<nav id="side" aria-label="Navegación principal">
+  <div class="logobox"><span class="lg-fb"><span style="font-size:22px">🧪</span>LOGO</span><img src="/logo.png" alt="Logo" onerror="this.remove()"></div>
+  <button class="nav-it on" id="navOrd"><span class="ic">▦</span>Órdenes</button>
+  <button class="nav-it" id="usrBtn" hidden><span class="ic">👤</span>Usuarios</button>
+  <button class="nav-it" id="audBtn" hidden><span class="ic">📋</span>Bitácora</button>
+  <div class="side-bot"><span class="side-av" id="sideAv">?</span>
+  <button class="nav-it" id="out"><span class="ic">🚪</span>Salir</button></div>
+</nav>
+<div class="wrap">
+<div class="top">
+  <div><h1>Órdenes de laboratorio</h1><p id="fechaLine">Hospital General</p></div>
+  <div class="sp"></div>
+  <input class="search" id="q" type="search" placeholder="🔎 Buscar folio o paciente…" aria-label="Buscar">
+  <div class="rolchip"><span class="av" id="whoAv">?</span><div><b id="whoName"></b><span id="whoRol"></span></div></div>
+  <button class="icon-btn" id="themeBtn" title="Cambiar tema claro / oscuro" aria-label="Cambiar tema">🌙</button>
+  <button class="btn-new" id="nuevo">＋ Nueva orden</button>
+</div>
 <div class="kpis" id="kpis"></div>
-<div class="bar"><input id="q" type="search" placeholder="Buscar por paciente, expediente, folio o análisis" aria-label="Buscar">
-<button class="btn" id="nuevo">+ Nueva orden</button></div>
-<div class="bar" style="align-items:center"><label for="fPri">Prioridad</label><select id="fPri"><option value="">Todas</option><option value="1">1 · Crítica</option><option value="2">2 · Urgente</option><option value="3">3 · Rutina</option></select><label for="fArea">Área</label><select id="fArea"><option value="">Todas</option></select></div>
-<div class="tw"><table><thead><tr><th>Folio</th><th>Paciente</th><th>Análisis</th><th>Prioridad</th><th>Estado</th><th>Solicitante</th><th>Recibida</th><th>Acciones</th></tr></thead><tbody id="tb"></tbody></table></div>
-<div class="bar" style="justify-content:space-between;align-items:center;margin-top:12px"><button class="btn sm sec" id="pgPrev">← Anterior</button><span class="mut" id="pgInfo" aria-live="polite"></span><button class="btn sm sec" id="pgNext">Siguiente →</button></div>
-</main></div>
+<div class="cols">
+<div class="card">
+  <div class="filters"><label for="fPri">Prioridad</label><select id="fPri"><option value="">Todas</option><option value="1">1 · Crítica</option><option value="2">2 · Urgente</option><option value="3">3 · Rutina</option></select><label for="fArea">Área</label><select id="fArea"><option value="">Todas</option></select></div>
+  <div class="tw"><table><thead><tr><th>Paciente</th><th>Folio</th><th>Análisis</th><th>Prioridad</th><th>Estado</th><th>Recibida</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+  <div class="pgbar"><button class="btn sm sec" id="pgPrev">← Anterior</button><span class="mut" id="pgInfo" aria-live="polite"></span><button class="btn sm sec" id="pgNext">Siguiente →</button></div>
+</div>
+<aside class="alerts-card" aria-label="Alertas críticas">
+  <h2>🚨 Alertas críticas</h2><p class="sub">Resultados fuera de rango crítico sin entregar</p>
+  <div id="alertList"><div class="okbox">Cargando…</div></div>
+  <div class="live off" id="liveInd"><span class="dot"></span><span id="liveTxt">Sin conexión</span></div>
+</aside>
+</div>
+</div></div></div>
 <dialog id="dlg"></dialog>
 <script>
 const $=s=>document.querySelector(s),ES=['Recepcionado','Procesando','Validación','Entregado'],NEXT={Recepcionado:'Procesando',Procesando:'Validación',Validación:'Entregado'},PL={1:'Crítica',2:'Urgente',3:'Rutina'};
-let T=sessionStorage.t,U=JSON.parse(sessionStorage.u||'null'),CAT={},F='',O=[],ws,idle;
+const EDOT={Recepcionado:'#94a3b8',Procesando:'#f59e0b','Validación':'#3b82f6',Entregado:'#22c55e'},AVC=['#0ea5a5','#6366f1','#f59e0b','#ec4899','#22c55e','#8b5cf6'];
+let T=sessionStorage.t,U=JSON.parse(sessionStorage.u||'null'),CAT={},F='',O=[],AL=[],ws,idle;
 let FP='',FA='',PG=1;const PER=25;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const can=(...r)=>r.includes(U?.rol);
+const iniciales=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+const avColor=s=>{let h=0;for(const c of String(s||''))h=(h*31+c.charCodeAt(0))>>>0;return AVC[h%AVC.length]};
+function edadDe(f){if(!f)return null;const n=new Date(f+'T00:00:00'),h=new Date();if(isNaN(n))return null;let a=h.getFullYear()-n.getFullYear();if(h.getMonth()<n.getMonth()||(h.getMonth()==n.getMonth()&&h.getDate()<n.getDate()))a--;return a>=0?a:null}
+function rolLine(u){if(!u)return '';switch(u.rol){case 'admin':return 'Administración del sistema';case 'medico':return 'Médico · '+(u.especialidad||'Medicina');case 'quimico':return 'Químico · Laboratorio clínico';case 'recepcion':return 'Recepción · Admisión';default:return u.rol||''}}
+function relCorta(iso){const mins=Math.max(0,Math.round((Date.now()-new Date(iso))/6e4));return mins<1?'ahora':mins<60?`hace ${mins} min`:mins<1440?`hace ${Math.floor(mins/60)} h`:`hace ${Math.floor(mins/1440)} d`}
 function toast(t,ok){const d=document.createElement('div');d.className='toast'+(ok?' ok':'');d.textContent=t;$('#toasts').append(d);setTimeout(()=>d.remove(),ok?3500:12000)}
 async function api(p,o={}){const r=await fetch('/api'+p,{...o,headers:{'Content-Type':'application/json',Authorization:'Bearer '+T}});
  if(r.status==401){logout();throw Error('Sesión expirada')}const d=await r.json().catch(()=>({}));
@@ -76,27 +208,42 @@ $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
  const r=await fetch('/api/auth/login',{method:'POST',body:new URLSearchParams({username:$('#u').value,password:$('#pw').value})});const d=await r.json();
  if(!r.ok)return $('#le').textContent=d.detail;T=d.access_token;U=d;sessionStorage.t=T;sessionStorage.u=JSON.stringify(d);start()};
 function logout(){sessionStorage.clear();location.reload()}$('#out').onclick=logout;
+function temaIcon(){const b=$('#themeBtn');if(b)b.textContent=document.documentElement.dataset.theme=='dark'?'☀️':'🌙'}
+$('#themeBtn').onclick=()=>{const h=document.documentElement,t=h.dataset.theme=='dark'?'light':'dark';h.dataset.theme=t;try{localStorage.setItem('ocac-theme',t)}catch(e){}temaIcon()};
+temaIcon();
+$('#navOrd').onclick=()=>{document.querySelectorAll('.nav-it').forEach(n=>n.classList.remove('on'));$('#navOrd').classList.add('on');scrollTo({top:0,behavior:'smooth'})};
 function bump(){clearTimeout(idle);idle=setTimeout(()=>{toast('Sesión cerrada por inactividad');setTimeout(logout,1500)},15*60e3)}
 ['click','keydown'].forEach(e=>addEventListener(e,()=>T&&bump()));
 async function start(){if(!T)return;$('#login').hidden=true;$('#app').hidden=false;
- $('#who').textContent=`${U.nombre} · ${U.rol}`;$('#audBtn').hidden=$('#usrBtn').hidden=!can('admin');$('#nuevo').hidden=!can('admin','medico','recepcion');bump();
+ $('#whoName').textContent=U.nombre;$('#whoRol').textContent=rolLine(U);
+ $('#whoAv').textContent=$('#sideAv').textContent=iniciales(U.nombre);
+ const fl=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('#fechaLine').textContent='Hospital General · '+fl[0].toUpperCase()+fl.slice(1);
+ $('#audBtn').hidden=$('#usrBtn').hidden=!can('admin');$('#nuevo').hidden=!can('admin','medico','recepcion');bump();
  CAT=await api('/catalogo');load();
  ws=new WebSocket(`${location.protocol=='https:'?'wss':'ws'}://${location.host}/ws/alertas?token=${T}`);
+ ws.onopen=()=>{$('#liveInd').classList.remove('off');$('#liveTxt').textContent='En vivo'};
+ ws.onclose=ws.onerror=()=>{$('#liveInd').classList.add('off');$('#liveTxt').textContent='Sin conexión'};
  ws.onmessage=e=>{const a=JSON.parse(e.data);toast(`⚠ ${a.mensaje} — ${a.paciente} (${a.folio})`);load()};setInterval(load,30000)}
 function recibida(x){const d=new Date(x.creado),mins=Math.max(0,Math.round((Date.now()-d)/6e4));
  const rel=mins<1?'ahora':mins<60?`hace ${mins} min`:mins<1440?`hace ${Math.floor(mins/60)} h${mins%60?' '+mins%60+' min':''}`:`hace ${Math.floor(mins/1440)} d`;
  const tarde=x.prioridad==1&&x.estado!='Entregado'&&mins>=120;
  return `${d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}<br>${tarde?`<span class="tag p1">⚠ ${rel}</span>`:`<span class="mut">${rel}</span>`}`}
-async function load(){if(!O.length)$('#tb').innerHTML='<tr><td colspan="8" class="empty">Cargando órdenes…</td></tr>';try{const [o0,s]=await Promise.all([api(`/ordenes?q=${encodeURIComponent($('#q').value)}&estado=${F=='crit'?'':encodeURIComponent(F)}`),api('/stats')]);const o=F=='crit'?o0.filter(x=>x.prioridad==1&&x.estado!='Entregado'):o0;O=o;
- $('#kpis').innerHTML=`<button class="kpi ${F?'':'on'}" data-f="">Todas<b>${s.total}</b></button>`+ES.map(x=>`<button class="kpi ${F==x?'on':''}" data-f="${x}">${x}<b>${s.estados[x]||0}</b></button>`).join('')+`<button class="kpi crit ${F=='crit'?'on':''}" data-f="crit">Críticas abiertas<b>${s.criticas}</b></button>`;
+async function load(){if(!O.length)$('#tb').innerHTML='<tr><td colspan="7" class="empty">Cargando órdenes…</td></tr>';try{const [o0,s,al]=await Promise.all([api(`/ordenes?q=${encodeURIComponent($('#q').value)}&estado=${F=='crit'?'':encodeURIComponent(F)}`),api('/stats'),api('/ordenes')]);const o=F=='crit'?o0.filter(x=>x.prioridad==1&&x.estado!='Entregado'):o0;O=o;AL=al;renderAlertas();
+ $('#kpis').innerHTML=`<button class="kpi ${F?'':'on'}" data-f=""><span>Todas</span><b>${s.total}</b></button>`+ES.map(x=>`<button class="kpi ${F==x?'on':''}" data-f="${x}"><span>${x}</span><b>${s.estados[x]||0}</b></button>`).join('')+`<button class="kpi crit ${F=='crit'?'on':''}" data-f="crit"><span>🚨 Críticas abiertas</span><b>${s.criticas}</b></button>`;
  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{F=b.dataset.f;PG=1;load()});
- if(o.length)render();else{$('#tb').innerHTML='<tr><td colspan="8" class="empty">No hay órdenes con este filtro. Crea una con “Nueva orden”.</td></tr>';$('#pgInfo').textContent='Sin resultados';$('#pgPrev').disabled=$('#pgNext').disabled=true}}catch(e){if(!O.length)$('#tb').innerHTML='<tr><td colspan="8" class="empty">No se pudieron cargar las órdenes. <button class="btn sm sec" onclick="load()">Reintentar</button></td></tr>';toast('No se pudieron cargar las órdenes: '+e.message)}}
-function fila(x){const hayM=(can('admin','medico','recepcion')&&x.estado!='Entregado')||['Validación','Entregado'].includes(x.estado)||can('admin');
- return `<tr class="${x.critico||(x.prioridad==1&&x.estado!='Entregado')?'c':''}"><td>${esc(x.folio)}</td><td><b>${esc(x.paciente)}</b><br><span class="mut">${esc(x.expediente)}</span></td><td>${esc(x.tipo_analisis)}<br><span class="mut">${esc(x.area)}</span></td>
- <td><span class="tag p${x.prioridad}">${PL[x.prioridad]}</span></td><td><span class="tag e${ES.indexOf(x.estado)}">${x.estado}</span></td><td>${esc(x.solicitante)}</td><td>${recibida(x)}</td><td><div class="acts">
- <button class="btn sm sec" onclick="res(${x.id})">${can('admin','quimico')&&x.estado!='Entregado'?'Resultados':'Ver'}</button>
- ${can('admin','quimico')&&NEXT[x.estado]?`<button class="btn sm" onclick="avanzar(${x.id},'${NEXT[x.estado]}')">→ ${NEXT[x.estado]}</button>`:''}
- ${hayM?`<button class="btn sm sec" aria-haspopup="menu" aria-expanded="false" aria-label="Más acciones para ${esc(x.folio)}" onclick="toggleMenu(event,${x.id})">⋯</button>`:''}</div></td></tr>`}
+ if(o.length)render();else{$('#tb').innerHTML='<tr><td colspan="7" class="empty">No hay órdenes con este filtro. Crea una con “Nueva orden”.</td></tr>';$('#pgInfo').textContent='Sin resultados';$('#pgPrev').disabled=$('#pgNext').disabled=true}}catch(e){if(!O.length)$('#tb').innerHTML='<tr><td colspan="7" class="empty">No se pudieron cargar las órdenes. <button class="btn sm sec" onclick="load()">Reintentar</button></td></tr>';toast('No se pudieron cargar las órdenes: '+e.message)}}
+function renderAlertas(){const list=[];
+ for(const x of AL){if(x.estado=='Entregado')continue;for(const [k,p] of Object.entries(x.analisis||{})){if(p.flag==='crítico'&&p.valor!=null)list.push({x,k,p})}}
+ const el=$('#alertList');if(!el)return;
+ if(!list.length){el.innerHTML='<div class="okbox">✓ Sin alertas. El panel se actualiza en tiempo real cuando un analizador reporta un valor crítico.</div>';return}
+ el.innerHTML=list.map(({x,k,p})=>`<div class="alert"><b>${esc(k)}</b> <span class="v">${p.valor} ${esc(p.u)}</span><small>${esc(x.paciente)} · ${esc(x.folio)} · ${relCorta(x.creado)}${x.solicitante?' · '+esc(x.solicitante):''}</small><button class="go" onclick="atender(${x.id})">Atender ahora →</button></div>`).join('')}
+function atender(id){if(!O.find(o=>o.id==id)){const x=AL.find(o=>o.id==id);if(x)O.unshift(x)}res(id)}
+function fila(x){const hayM=(can('admin','medico','recepcion')&&x.estado!='Entregado')||['Validación','Entregado'].includes(x.estado)||can('admin');const ed=edadDe(x.fecha_nac);
+ return `<tr class="${x.critico||(x.prioridad==1&&x.estado!='Entregado')?'c':''}"><td><div class="who"><span class="av2" style="background:${avColor(x.paciente)}">${esc(iniciales(x.paciente))}</span><span class="pac"><b>${esc(x.paciente)}</b><small>${esc(x.expediente)}${ed!=null?' · '+ed+' años':''}</small></span></div></td><td class="folio">${esc(x.folio)}</td><td>${esc(x.tipo_analisis)}<br><span class="mut">${esc(x.area)}</span></td>
+ <td><span class="tag p${x.prioridad}">${PL[x.prioridad]}</span></td><td><span class="st"><i style="background:${EDOT[x.estado]||'#94a3b8'}"></i>${x.estado}</span></td><td>${recibida(x)}</td><td><div class="acts">
+ <button class="b2" onclick="res(${x.id})">${can('admin','quimico')&&x.estado!='Entregado'?'Resultados':'Ver'}</button>
+ ${can('admin','quimico')&&NEXT[x.estado]?`<button class="b1" onclick="avanzar(${x.id},'${NEXT[x.estado]}')">→ ${NEXT[x.estado]}</button>`:''}
+ ${hayM?`<button class="b3" aria-haspopup="menu" aria-expanded="false" aria-label="Más acciones para ${esc(x.folio)}" onclick="toggleMenu(event,${x.id})">⋯</button>`:''}</div></td></tr>`}
 var menuEl=null,menuBtn=null;
 function closeMenu(){if(menuEl){menuEl.remove();menuEl=null}if(menuBtn){menuBtn.setAttribute('aria-expanded','false');menuBtn=null}}
 function toggleMenu(ev,id){const b=ev.currentTarget,was=menuBtn===b;closeMenu();if(was)return;
@@ -118,7 +265,7 @@ function render(){if(!O.length)return;closeMenu();
  const as=$('#fArea'),set=new Set(O.map(x=>x.area));if(FA)set.add(FA);
  as.innerHTML='<option value="">Todas</option>'+[...set].sort().map(a=>`<option ${a==FA?'selected':''}>${esc(a)}</option>`).join('');
  const page=rows.slice((PG-1)*PER,PG*PER);
- $('#tb').innerHTML=page.length?page.map(fila).join(''):'<tr><td colspan="8" class="empty">Ninguna orden coincide con la prioridad o el área elegidas.</td></tr>';
+ $('#tb').innerHTML=page.length?page.map(fila).join(''):'<tr><td colspan="7" class="empty">Ninguna orden coincide con la prioridad o el área elegidas.</td></tr>';
  $('#pgInfo').textContent=rows.length?`Página ${PG} de ${pages} · ${rows.length} ${rows.length==1?'orden':'órdenes'}`:'Sin resultados';
  $('#pgPrev').disabled=PG<=1;$('#pgNext').disabled=PG>=pages}
 $('#fPri').onchange=e=>{FP=e.target.value;PG=1;render()};
@@ -150,7 +297,7 @@ function formOrden(id){const x=id?O.find(o=>o.id==id):{sexo:'M',prioridad:3,soli
  <div><label for="f_p">Prioridad</label><select id="f_p">${[1,2,3].map(p=>`<option value="${p}" ${x.prioridad==p?'selected':''}>${PL[p]}</option>`).join('')}</select></div></div>
  <label for="f_m">Médico solicitante</label><input id="f_m" value="${esc(x.solicitante)}"><label for="f_o">Observaciones clínicas</label><textarea id="f_o" rows="2">${esc(x.observaciones)}</textarea>
  <div class="foot"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn" id="sv">Guardar orden</button></div>`;
- const edad=()=>{const el=$('#f_edad'),v=$('#f_f').value;if(!v){el.textContent='';return}const n=new Date(v+'T00:00:00'),h=new Date();let a=h.getFullYear()-n.getFullYear();if(h.getMonth()<n.getMonth()||(h.getMonth()==n.getMonth()&&h.getDate()<n.getDate()))a--;el.textContent=isNaN(a)||a<0?'':'Edad: '+a+(a==1?' año':' años')};
+ const edad=()=>{const el=$('#f_edad'),v=$('#f_f').value;if(!v){el.textContent='';return}const a=edadDe(v);el.textContent=a==null?'':'Edad: '+a+(a==1?' año':' años')};
  $('#f_f').addEventListener('input',edad);edad();
  $('#sv').onclick=async()=>{const btn=$('#sv');if(btn.disabled)return;btn.disabled=true;
   document.querySelectorAll('.ferr').forEach(p=>{p.hidden=true;p.textContent=''});document.querySelectorAll('#dlg [aria-invalid]').forEach(i=>i.removeAttribute('aria-invalid'));
@@ -158,7 +305,7 @@ function formOrden(id){const x=id?O.find(o=>o.id==id):{sexo:'M',prioridad:3,soli
   try{await api(id?'/ordenes/'+id:'/ordenes',{method:id?'PUT':'POST',body:JSON.stringify(b)});toast(id?'Orden actualizada':'Orden creada',1);cerrar();load()}catch(e){if(!erroresCampo(e))toast(e.message)}finally{btn.disabled=false}};
  $('#dlg').showModal()}
 $('#nuevo').onclick=()=>can('admin','medico','recepcion')?formOrden():toast('Tu rol no puede crear órdenes');
-function res(id){const x=O.find(o=>o.id==id),edit=can('admin','quimico')&&x.estado!='Entregado';
+function res(id){const x=O.find(o=>o.id==id);if(!x)return;const edit=can('admin','quimico')&&x.estado!='Entregado';
  const rid=k=>'r_'+k.replace(/[^a-zA-Z0-9_-]/g,'_');
  $('#dlg').innerHTML=`<h2 style="margin:0">${esc(x.tipo_analisis)}</h2><p class="mut">${esc(x.paciente)} · ${esc(x.folio)} · ${x.estado}${x.observaciones?'<br>Nota: '+esc(x.observaciones):''}</p>
  ${Object.entries(x.analisis).map(([k,p])=>{const crit=(p.cmin!=null||p.cmax!=null)?`<br><span class="mut">Crítico: ${[p.cmin!=null?'&lt; '+p.cmin:null,p.cmax!=null?'&gt; '+p.cmax:null].filter(Boolean).join(' o ')}</span>`:'';
@@ -178,17 +325,17 @@ async function blob(p){const r=await fetch(p,{headers:{Authorization:'Bearer '+T
 async function pdf(id){const w=window.open('','_blank');try{w.location=URL.createObjectURL(await blob(`/api/ordenes/${id}/pdf`))}catch(e){w.close();toast(e.message)}}
 async function fhir(id){try{const a=document.createElement('a');a.href=URL.createObjectURL(await blob(`/api/ordenes/${id}/fhir`));a.download='fhir-orden-'+id+'.json';a.click()}catch(e){toast(e.message)}}
 function spark(pts,p){const W=300,H=64,v=pts.map(x=>x.valor),lo=Math.min(...v,p.min),hi=Math.max(...v,p.max),r=(hi-lo)||1,y=n=>H-6-(n-lo)/r*(H-12),x=i=>pts.length>1?8+i*(W-16)/(pts.length-1):W/2;
- return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Tendencia"><rect x="0" y="${y(p.max)}" width="${W}" height="${Math.max(2,y(p.min)-y(p.max))}" fill="#e2f1ef"/><polyline fill="none" stroke="#0e6b64" stroke-width="2" points="${pts.map((q,i)=>x(i)+','+y(q.valor)).join(' ')}"/>${pts.map((q,i)=>`<circle cx="${x(i)}" cy="${y(q.valor)}" r="${i==pts.length-1?5:3}" fill="${i==pts.length-1?'#10302f':'#0e6b64'}"><title>${q.valor} · ${new Date(q.fecha).toLocaleDateString('es-MX')}</title></circle>`).join('')}</svg>`}
-const _res=res;res=async function(id){_res(id);const x=O.find(o=>o.id==id),f=$('#dlg .foot');
+ return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Tendencia"><rect x="0" y="${y(p.max)}" width="${W}" height="${Math.max(2,y(p.min)-y(p.max))}" fill="#7dd3fc" opacity=".25"/><polyline fill="none" stroke="#4f46e5" stroke-width="2" points="${pts.map((q,i)=>x(i)+','+y(q.valor)).join(' ')}"/>${pts.map((q,i)=>`<circle cx="${x(i)}" cy="${y(q.valor)}" r="${i==pts.length-1?5:3}" fill="#4f46e5"><title>${q.valor} · ${new Date(q.fecha).toLocaleDateString('es-MX')}</title></circle>`).join('')}</svg>`}
+const _res=res;res=async function(id){_res(id);const x=O.find(o=>o.id==id);if(!x)return;const f=$('#dlg .foot');
  if(x.estado!='Recepcionado')f.insertAdjacentHTML('afterbegin',`<button class="btn sec" onclick="pdf(${id})">PDF</button><button class="btn sec" onclick="fhir(${id})">FHIR</button>`);
  try{const h=await api(`/ordenes/${id}/historial`),P=CAT[x.tipo_analisis].params;
   const t=Object.entries(h.series).filter(([k,s])=>s.length>1).map(([k,s])=>{const d=h.delta[k];return `<div style="margin-top:10px"><b>${esc(k)}</b> <span class="mut">${s.length} resultados · ${esc(P[k].u)}</span>${d?` <span class="tag f-crítico">Δ ${d.pct>0?'+':''}${d.pct}% vs ${new Date(d.fecha).toLocaleDateString('es-MX')}</span>`:''}${spark(s,P[k])}</div>`}).join('');
   if(t)f.insertAdjacentHTML('beforebegin',`<h3 style="margin:16px 0 0">Tendencia del paciente</h3>${t}`)}catch(e){}};
 $('#usrBtn').onclick=users;
 async function users(){const L=await api('/usuarios');window.UL=L;
- $('#dlg').innerHTML=`<h2 style="margin:0">Usuarios del sistema</h2><table style="min-width:0">${L.map(x=>`<tr><td><b>${esc(x.nombre)}</b><br><span class="mut">${esc(x.username)} · ${x.rol}${x.activo?'':' · inactivo'}</span></td><td><button class="btn sm sec" onclick="uform(${x.id})">Editar</button></td></tr>`).join('')}</table><div class="foot"><button class="btn sec" onclick="cerrar()">Cerrar</button><button class="btn" onclick="uform()">+ Nuevo usuario</button></div>`;
+ $('#dlg').innerHTML=`<h2 style="margin:0">Usuarios del sistema</h2><table style="min-width:0">${L.map(x=>`<tr><td><b>${esc(x.nombre)}</b><br><span class="mut">${esc(x.username)} · ${x.rol}${x.especialidad?' · '+esc(x.especialidad):''}${x.activo?'':' · inactivo'}</span></td><td><button class="btn sm sec" onclick="uform(${x.id})">Editar</button></td></tr>`).join('')}</table><div class="foot"><button class="btn sec" onclick="cerrar()">Cerrar</button><button class="btn" onclick="uform()">+ Nuevo usuario</button></div>`;
  if(!$('#dlg').open)$('#dlg').showModal()}
-function uform(id){const x=id?UL.find(u=>u.id==id):{rol:'medico',activo:true};
- $('#dlg').innerHTML=`<h2 style="margin:0">${id?'Editar usuario':'Nuevo usuario'}</h2><label>Usuario (minúsculas, sin espacios)</label><input id="u_u" value="${esc(x.username)}" ${id?'readonly':''}><label>Nombre completo</label><input id="u_n" value="${esc(x.nombre)}"><label>Rol</label><select id="u_r">${['medico','quimico','recepcion','admin'].map(r=>`<option ${x.rol==r?'selected':''}>${r}</option>`).join('')}</select><label>${id?'Nueva contraseña (vacío = no cambiar)':'Contraseña (mínimo 8 caracteres)'}</label><input id="u_p" type="password" autocomplete="new-password"><label style="display:flex;gap:8px;align-items:center"><input id="u_a" type="checkbox" style="width:auto" ${x.activo?'checked':''}>Cuenta activa</label><div class="foot"><button class="btn sec" onclick="users()">Volver</button><button class="btn" id="u_s">Guardar usuario</button></div>`;
- $('#u_s').onclick=async()=>{try{await api(id?'/usuarios/'+id:'/usuarios',{method:id?'PUT':'POST',body:JSON.stringify({username:$('#u_u').value.trim(),nombre:$('#u_n').value.trim(),rol:$('#u_r').value,password:$('#u_p').value||null,activo:$('#u_a').checked})});toast('Usuario guardado',1);users()}catch(e){toast(e.message)}}}
+function uform(id){const x=id?UL.find(u=>u.id==id):{rol:'medico',activo:true,especialidad:''};
+ $('#dlg').innerHTML=`<h2 style="margin:0">${id?'Editar usuario':'Nuevo usuario'}</h2><label>Usuario (minúsculas, sin espacios)</label><input id="u_u" value="${esc(x.username)}" ${id?'readonly':''}><label>Nombre completo</label><input id="u_n" value="${esc(x.nombre)}"><label>Rol</label><select id="u_r">${['medico','quimico','recepcion','admin'].map(r=>`<option ${x.rol==r?'selected':''}>${r}</option>`).join('')}</select><label>Especialidad</label><input id="u_e" value="${esc(x.especialidad||'')}" placeholder="Ej. Medicina interna (solo aplica a médicos)"><label>${id?'Nueva contraseña (vacío = no cambiar)':'Contraseña (mínimo 8 caracteres)'}</label><input id="u_p" type="password" autocomplete="new-password"><label style="display:flex;gap:8px;align-items:center"><input id="u_a" type="checkbox" style="width:auto" ${x.activo?'checked':''}>Cuenta activa</label><div class="foot"><button class="btn sec" onclick="users()">Volver</button><button class="btn" id="u_s">Guardar usuario</button></div>`;
+ $('#u_s').onclick=async()=>{try{await api(id?'/usuarios/'+id:'/usuarios',{method:id?'PUT':'POST',body:JSON.stringify({username:$('#u_u').value.trim(),nombre:$('#u_n').value.trim(),rol:$('#u_r').value,especialidad:$('#u_e').value.trim(),password:$('#u_p').value||null,activo:$('#u_a').checked})});toast('Usuario guardado',1);users()}catch(e){toast(e.message)}}}
 </script></body></html>
