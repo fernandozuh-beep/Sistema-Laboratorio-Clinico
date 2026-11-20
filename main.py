@@ -15,7 +15,7 @@ try:  # Migración ligera: columna especialidad en instalaciones previas (Postgr
         _c.exec_driver_sql("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS especialidad VARCHAR(100) DEFAULT ''")
 except Exception:
     pass
-app = FastAPI(title="OCAC - Hospital Intelligence System")
+app = FastAPI(title="MonOCAC — Sistema de Laboratorio Clínico")
 
 # ---------- Alertas en tiempo real (WebSocket autenticado) ----------
 class Hub:
@@ -174,7 +174,7 @@ def seed():
     db = m.SessionLocal()
     if db.query(m.Usuario).count():
         db.close(); return
-    for un, nom, rol, esp in [("admin", "Administrador OCAC", "admin", ""), ("dra.lopez", "Dra. Mariana López", "medico", "Medicina interna"),
+    for un, nom, rol, esp in [("admin", "Administrador MonOCAC", "admin", ""), ("dra.lopez", "Dra. Mariana López", "medico", "Medicina interna"),
                               ("qfb.ramirez", "QFB Luis Ramírez", "quimico", ""), ("recepcion", "Ana Torres", "recepcion", "")]:
         db.add(m.Usuario(username=un, nombre=nom, rol=rol, especialidad=esp, hashed_password=sec.hash_pw("Ocac2026!")))
     pac = [("EXP-0001", "Carlos Hernández Ruiz", "M", "1958-03-12"), ("EXP-0002", "María Fernanda Soto", "F", "1990-07-25"),
