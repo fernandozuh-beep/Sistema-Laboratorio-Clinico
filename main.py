@@ -10,6 +10,11 @@ from models import get_db
 import extras
 
 m.Base.metadata.create_all(bind=m.engine)
+try:  # Migración ligera: columna especialidad en instalaciones previas (PostgreSQL en producción)
+    with m.engine.begin() as _c:
+        _c.exec_driver_sql("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS especialidad VARCHAR(100) DEFAULT ''")
+except Exception:
+    pass
 app = FastAPI(title="OCAC - Hospital Intelligence System")
 
 # ---------- Alertas en tiempo real (WebSocket autenticado) ----------
@@ -79,7 +84,8 @@ def login(f: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
         raise HTTPException(401, "Usuario o contraseña incorrectos")
     u.intentos = 0; audit(db, u.username, "Login"); db.commit()
     return {"access_token": sec.make_token(u.username, u.rol), "token_type": "bearer",
-            "usuario": u.username, "nombre": u.nombre, "rol": u.rol}
+            "usuario": u.username, "nombre": u.nombre, "rol": u.rol,
+            "especialidad": u.especialidad or ""}
 
 # ---------- Órdenes de análisis (CRUD) ----------
 @app.get("/api/catalogo")
@@ -168,9 +174,9 @@ def seed():
     db = m.SessionLocal()
     if db.query(m.Usuario).count():
         db.close(); return
-    for un, nom, rol in [("admin", "Administrador OCAC", "admin"), ("dra.lopez", "Dra. Mariana López", "medico"),
-                         ("qfb.ramirez", "QFB Luis Ramírez", "quimico"), ("recepcion", "Ana Torres", "recepcion")]:
-        db.add(m.Usuario(username=un, nombre=nom, rol=rol, hashed_password=sec.hash_pw("Ocac2026!")))
+    for un, nom, rol, esp in [("admin", "Administrador OCAC", "admin", ""), ("dra.lopez", "Dra. Mariana López", "medico", "Medicina interna"),
+                              ("qfb.ramirez", "QFB Luis Ramírez", "quimico", ""), ("recepcion", "Ana Torres", "recepcion", "")]:
+        db.add(m.Usuario(username=un, nombre=nom, rol=rol, especialidad=esp, hashed_password=sec.hash_pw("Ocac2026!")))
     pac = [("EXP-0001", "Carlos Hernández Ruiz", "M", "1958-03-12"), ("EXP-0002", "María Fernanda Soto", "F", "1990-07-25"),
            ("EXP-0003", "José Luis Morales", "M", "1972-11-02"), ("EXP-0004", "Guadalupe Ortega", "F", "1965-01-30"),
            ("EXP-0005", "Ricardo Flores", "M", "2001-09-14"), ("EXP-0006", "Sofía Cabrera", "F", "1984-05-19")]

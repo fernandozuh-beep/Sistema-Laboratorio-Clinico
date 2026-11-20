@@ -24,6 +24,7 @@ class Usuario(Base):
     nombre = Column(String(100))
     hashed_password = Column(String, nullable=False)
     rol = Column(String(20), default="medico")  # admin | medico | quimico | recepcion
+    especialidad = Column(String(100), default="")
     activo = Column(Boolean, default=True)
     intentos = Column(Integer, default=0)
     bloqueado_hasta = Column(DateTime(timezone=True))
