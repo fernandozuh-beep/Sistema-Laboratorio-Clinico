@@ -65,12 +65,12 @@ label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
 .top p{color:var(--mut);font-size:13px;margin:2px 0 0}
 .top .sp{flex:1}
 .top .search{width:250px;background:var(--card)}
-.rolchip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px 14px 5px 5px}
+.rolchip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 16px}
 .rolchip b{font-size:14px;display:block;line-height:1.15}
 .rolchip span{font-size:12px;color:var(--acc);font-weight:600}
 .icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center}
-.icon-btn.in-chip{width:37px;height:37px;border:0;border-radius:50%;background:var(--acc-soft);font-size:16px;flex:none}
-.icon-btn.in-chip:hover{background:var(--line)}
+.side-bot .icon-btn{width:44px;height:44px;border:0;border-radius:50%;background:var(--acc-soft);font-size:18px;flex:none}
+.side-bot .icon-btn:hover{background:var(--line)}
 .who-btn{background:none;border:0;padding:2px 0;color:inherit;text-align:left;cursor:pointer;display:block}
 .who-btn:hover b{text-decoration:underline}
 .perfil{margin:12px 0 6px}
