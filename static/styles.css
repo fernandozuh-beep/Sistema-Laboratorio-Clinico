@@ -39,6 +39,10 @@ label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
 .logobox{position:relative;border:2px dashed #a5b4fc;background:#eef2ff;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
 .logobox .lg-fb{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#4f46e5;font-weight:800;line-height:1.15;text-align:center}
 .logobox img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--card)}
+.logobox:has(img){border-color:transparent;background:transparent}
+.logobox:has(img) .lg-fb{display:none}
+.logobox:has(img) img{background:transparent}
+.lg-left .logobox:has(img){border-color:transparent;background:transparent}
 .lg-left .logobox{width:84px;height:84px;border-radius:22px;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.12)}
 .lg-left .logobox .lg-fb{color:#fff;font-size:13px}
 /* ---------- Estructura de la app ---------- */
