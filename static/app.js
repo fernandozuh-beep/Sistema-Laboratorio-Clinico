@@ -1,7 +1,7 @@
 
 const $=s=>document.querySelector(s),ES=['Recepcionado','Procesando','Validación','Entregado'],NEXT={Recepcionado:'Procesando',Procesando:'Validación',Validación:'Entregado'},PL={1:'Crítica',2:'Urgente',3:'Rutina'};
 const EDOT={Recepcionado:'#94a3b8',Procesando:'#f59e0b','Validación':'#3b82f6',Entregado:'#22c55e'},AVC=['#0ea5a5','#6366f1','#f59e0b','#ec4899','#22c55e','#8b5cf6'];
-let T=sessionStorage.t,U=JSON.parse(sessionStorage.u||'null'),CAT={},F='',O=[],AL=[],ws,idle;
+let T=sessionStorage.t,U=JSON.parse(sessionStorage.u||'null'),CAT={},F='',O=[],AL=[],ws,idle,wsOk=false,refInt=null,reTimer=null,critPrev=null;
 let FP='',FA='',PG=1;const PER=25;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const can=(...r)=>r.includes(U?.rol);
@@ -28,16 +28,20 @@ async function start(){if(!T)return;$('#login').hidden=true;$('#app').hidden=fal
  $('#whoName').textContent=U.nombre;$('#whoRol').textContent=rolLine(U);
  const fl=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('#fechaLine').textContent='Hospital General · '+fl[0].toUpperCase()+fl.slice(1);
  $('#audBtn').hidden=$('#usrBtn').hidden=!can('admin');$('#nuevo').hidden=!can('admin','medico','recepcion');bump();
- CAT=await api('/catalogo');load();
- ws=new WebSocket(`${location.protocol=='https:'?'wss':'ws'}://${location.host}/ws/alertas?token=${T}`);
- ws.onopen=()=>{$('#liveInd').classList.remove('off');$('#liveTxt').textContent='En vivo'};
- ws.onclose=ws.onerror=()=>{$('#liveInd').classList.add('off');$('#liveTxt').textContent='Sin conexión'};
- ws.onmessage=e=>{const a=JSON.parse(e.data);toast(`⚠ ${a.mensaje} — ${a.paciente} (${a.folio})`);load()};setInterval(load,30000)}
+ CAT=await api('/catalogo');load();conectar();armRefresh()}
+function conectar(){try{ws=new WebSocket(`${location.protocol=='https:'?'wss':'ws'}://${location.host}/ws/alertas?token=${T}`)}catch(e){wsOk=false;indAuto();armRefresh();reintentar();return}
+ ws.onopen=()=>{wsOk=true;$('#liveInd').className='live';$('#liveTxt').textContent='En vivo';armRefresh()};
+ ws.onclose=ws.onerror=()=>{wsOk=false;indAuto();armRefresh();reintentar()};
+ ws.onmessage=e=>{const a=JSON.parse(e.data);toast(`⚠ ${a.mensaje} — ${a.paciente} (${a.folio})`);load()}}
+function indAuto(){const i=$('#liveInd');if(i){i.className='live auto';$('#liveTxt').textContent='Actualización automática'}}
+function reintentar(){clearTimeout(reTimer);if(T)reTimer=setTimeout(conectar,10000)}
+function armRefresh(){clearInterval(refInt);refInt=setInterval(load,wsOk?30000:15000)}
+function critKeys(){const s=new Set();for(const x of AL){if(x.estado=='Entregado')continue;for(const [k,p] of Object.entries(x.analisis||{})){if(p.flag==='crítico'&&p.valor!=null)s.add(x.folio+'|'+k)}}return s}
 function recibida(x){const d=new Date(x.creado),mins=Math.max(0,Math.round((Date.now()-d)/6e4));
  const rel=mins<1?'ahora':mins<60?`hace ${mins} min`:mins<1440?`hace ${Math.floor(mins/60)} h${mins%60?' '+mins%60+' min':''}`:`hace ${Math.floor(mins/1440)} d`;
  const tarde=x.prioridad==1&&x.estado!='Entregado'&&mins>=120;
  return `${d.toLocaleDateString('es-MX',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}<br>${tarde?`<span class="tag p1">⚠ ${rel}</span>`:`<span class="mut">${rel}</span>`}`}
-async function load(){if(!O.length)$('#tb').innerHTML='<tr><td colspan="7" class="empty">Cargando órdenes…</td></tr>';try{const [o0,s,al]=await Promise.all([api(`/ordenes?q=${encodeURIComponent($('#q').value)}&estado=${F=='crit'?'':encodeURIComponent(F)}`),api('/stats'),api('/ordenes')]);const o=F=='crit'?o0.filter(x=>x.prioridad==1&&x.estado!='Entregado'):o0;O=o;AL=al;renderAlertas();
+async function load(){if(!O.length)$('#tb').innerHTML='<tr><td colspan="7" class="empty">Cargando órdenes…</td></tr>';try{const [o0,s,al]=await Promise.all([api(`/ordenes?q=${encodeURIComponent($('#q').value)}&estado=${F=='crit'?'':encodeURIComponent(F)}`),api('/stats'),api('/ordenes')]);const o=F=='crit'?o0.filter(x=>x.prioridad==1&&x.estado!='Entregado'):o0;O=o;AL=al;const ah=critKeys();if(critPrev&&!wsOk){for(const key of ah){if(!critPrev.has(key)){const fo=key.split('|')[0],pa=key.split('|')[1],ox=AL.find(x=>x.folio==fo);toast(`⚠ Nuevo valor crítico: ${pa} — ${ox?ox.paciente:''} (${fo})`);break}}}critPrev=ah;renderAlertas();
  $('#kpis').innerHTML=`<button class="kpi ${F?'':'on'}" data-f=""><span>Todas</span><b>${s.total}</b></button>`+ES.map(x=>`<button class="kpi ${F==x?'on':''}" data-f="${x}"><span>${x}</span><b>${s.estados[x]||0}</b></button>`).join('')+`<button class="kpi crit ${F=='crit'?'on':''}" data-f="crit"><span>🚨 Críticas abiertas</span><b>${s.criticas}</b></button>`;
  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{F=b.dataset.f;PG=1;load()});
  if(o.length)render();else{$('#tb').innerHTML='<tr><td colspan="7" class="empty">No hay órdenes con este filtro. Crea una con “Nueva orden”.</td></tr>';$('#pgInfo').textContent='Sin resultados';$('#pgPrev').disabled=$('#pgNext').disabled=true}}catch(e){if(!O.length)$('#tb').innerHTML='<tr><td colspan="7" class="empty">No se pudieron cargar las órdenes. <button class="btn sm sec" onclick="load()">Reintentar</button></td></tr>';toast('No se pudieron cargar las órdenes: '+e.message)}}
