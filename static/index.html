@@ -33,16 +33,14 @@
   <button class="nav-it on" id="navOrd"><span class="ic">▦</span>Órdenes</button>
   <button class="nav-it" id="usrBtn" hidden><span class="ic">👤</span>Usuarios</button>
   <button class="nav-it" id="audBtn" hidden><span class="ic">📋</span>Bitácora</button>
-  <div class="side-bot"><span class="side-av" id="sideAv">?</span>
-  <button class="nav-it" id="out"><span class="ic">🚪</span>Salir</button></div>
+  <div class="side-bot"><button class="nav-it" id="out"><span class="ic">🚪</span>Salir</button></div>
 </nav>
 <div class="wrap">
 <div class="top">
   <div><h1>Órdenes de laboratorio</h1><p id="fechaLine">Hospital General</p></div>
   <div class="sp"></div>
   <input class="search" id="q" type="search" placeholder="🔎 Buscar folio o paciente…" aria-label="Buscar">
-  <div class="rolchip"><span class="av" id="whoAv">?</span><div><b id="whoName"></b><span id="whoRol"></span></div></div>
-  <button class="icon-btn" id="themeBtn" title="Cambiar tema claro / oscuro" aria-label="Cambiar tema">🌙</button>
+  <div class="rolchip"><button class="icon-btn in-chip" id="themeBtn" title="Cambiar tema claro / oscuro" aria-label="Cambiar tema">🌙</button><button class="who-btn" id="perfilBtn" title="Ver mi perfil" aria-haspopup="dialog"><b id="whoName"></b><span id="whoRol"></span></button></div>
   <button class="btn-new" id="nuevo">＋ Nueva orden</button>
 </div>
 <div class="kpis" id="kpis"></div>

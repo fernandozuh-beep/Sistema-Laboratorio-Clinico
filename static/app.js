@@ -26,7 +26,6 @@ function bump(){clearTimeout(idle);idle=setTimeout(()=>{toast('Sesión cerrada p
 ['click','keydown'].forEach(e=>addEventListener(e,()=>T&&bump()));
 async function start(){if(!T)return;$('#login').hidden=true;$('#app').hidden=false;
  $('#whoName').textContent=U.nombre;$('#whoRol').textContent=rolLine(U);
- $('#whoAv').textContent=$('#sideAv').textContent=iniciales(U.nombre);
  const fl=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('#fechaLine').textContent='Hospital General · '+fl[0].toUpperCase()+fl.slice(1);
  $('#audBtn').hidden=$('#usrBtn').hidden=!can('admin');$('#nuevo').hidden=!can('admin','medico','recepcion');bump();
  CAT=await api('/catalogo');load();
@@ -134,6 +133,16 @@ async function res(id){const x=O.find(o=>o.id==id);if(!x)return;const edit=can('
   const t=Object.entries(h.series).filter(([k,s])=>s.length>1).map(([k,s])=>{const d=h.delta[k],last=s[s.length-1];
   return `<div style="margin-top:10px"><b>${esc(k)}</b> <span class="mut">${s.length} resultados · ${esc(P[k].u)}</span>${d?deltaTag(d,P[k]):''}<br><span class="mut">Último: <b>${last.valor} ${esc(P[k].u)}</b> · ${new Date(last.fecha).toLocaleDateString('es-MX')}</span>${spark(s,P[k])}</div>`}).join('');
   if(t)f.insertAdjacentHTML('beforebegin',`<h3 style="margin:16px 0 0">Tendencia del paciente</h3>${t}`)}catch(e){}}
+$('#perfilBtn').onclick=()=>{
+ $('#dlg').innerHTML=`<h2 style="margin:0">Mi perfil</h2><dl class="perfil">
+ <div><dt>Nombre</dt><dd>${esc(U.nombre)}</dd></div>
+ <div><dt>Usuario</dt><dd>${esc(U.usuario)}</dd></div>
+ <div><dt>Rol</dt><dd>${esc(rolLine(U))}</dd></div>
+ ${U.especialidad?`<div><dt>Especialidad</dt><dd>${esc(U.especialidad)}</dd></div>`:''}
+ <div><dt>Estado</dt><dd>Activo</dd></div></dl>
+ <p class="mut">Los cambios de tu cuenta los realiza el administrador.</p>
+ <div class="foot"><button class="btn sec" onclick="cerrar()">Cerrar</button></div>`;
+ $('#dlg').showModal()};
 $('#audBtn').onclick=async()=>{const a=await api('/auditoria');$('#dlg').innerHTML=`<h2 style="margin:0">Bitácora de auditoría</h2><div style="max-height:60vh;overflow:auto"><table style="min-width:0">${a.map(r=>`<tr><td class="mut">${new Date(r.fecha).toLocaleString('es-MX')}</td><td>${esc(r.usuario)}</td><td>${esc(r.accion)} ${esc(r.folio||'')}</td></tr>`).join('')}</table></div><div class="foot"><button class="btn sec" onclick="cerrar()">Cerrar</button></div>`;$('#dlg').showModal()};
 const nav=performance.getEntriesByType('navigation')[0];
 if(nav&&nav.type==='back_forward'&&sessionStorage.t){sessionStorage.clear();T=null;U=null}

@@ -113,32 +113,156 @@ def fhir(id: int, db=Depends(get_db), u=Depends(sec.user)):
 # ---------- Reporte PDF ----------
 @router.get("/api/ordenes/{id}/pdf")
 def pdf(id: int, db=Depends(get_db), u=Depends(sec.user)):
+    from xml.sax.saxutils import escape as xesc
     from reportlab.lib.pagesizes import letter
     from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.platypus import (BaseDocTemplate, PageTemplate, Frame, Paragraph,
+                                    Table, TableStyle, Spacer, Image)
     M = _M(); o = M.get_o(db, id)
     if not o.resultados: raise HTTPException(422, "La orden aún no tiene resultados")
     val = db.query(m.Auditoria).filter(m.Auditoria.folio == o.folio, m.Auditoria.accion == "Estado → Entregado").first()
-    S, p = getSampleStyleSheet(), o.paciente
-    el = [Paragraph(f"<b>{HOSPITAL}</b> · Laboratorio clínico · MonOCAC", S["Title"]),
-          Paragraph(f"<b>Paciente:</b> {p.nombre} &nbsp; <b>Expediente:</b> {p.expediente} &nbsp; <b>Sexo:</b> {p.sexo} &nbsp; <b>Nac.:</b> {p.fecha_nac or '—'}", S["Normal"]),
-          Paragraph(f"<b>Folio:</b> {o.folio} &nbsp; <b>Estudio:</b> {o.tipo_analisis} &nbsp; <b>Solicitante:</b> {o.solicitante or '—'}", S["Normal"])]
+    p = o.paciente
+    INDIGO, TEAL = colors.HexColor("#4f46e5"), colors.HexColor("#0e7c86")
+    GRIS, BORDE = colors.HexColor("#64748b"), colors.HexColor("#d7dee9")
+    W = letter[0] - 72  # 540 pt útiles: márgenes de 36 pt por lado
+
+    def fmt_dt(dt):
+        return dt.strftime("%d/%m/%Y %H:%M") if dt else "—"
+    def edad_de(fn):
+        try: n = datetime.strptime(fn or "", "%Y-%m-%d").date()
+        except Exception: return None
+        h = datetime.now().date(); a = h.year - n.year - ((h.month, h.day) < (n.month, n.day))
+        return a if a >= 0 else None
+    def fnac(fn):
+        try: return datetime.strptime(fn or "", "%Y-%m-%d").strftime("%d/%m/%Y")
+        except Exception: return fn or "—"
+
+    st_title = ParagraphStyle("titulo", fontName="Helvetica-Bold", fontSize=22, leading=24, textColor=INDIGO)
+    st_sub = ParagraphStyle("subtitulo", fontName="Helvetica", fontSize=8, leading=10, textColor=GRIS)
+    st_hosp = ParagraphStyle("hosp", fontName="Helvetica-Bold", fontSize=11.5, leading=14, alignment=TA_RIGHT)
+    st_hosp2 = ParagraphStyle("hosp2", fontName="Helvetica", fontSize=9, leading=12, textColor=GRIS, alignment=TA_RIGHT)
+    st_est = ParagraphStyle("estudio", fontName="Helvetica-Bold", fontSize=10.5, leading=13, alignment=TA_RIGHT)
+    st_cell = ParagraphStyle("celda", fontName="Helvetica", fontSize=9.5, leading=12.5)
+    st_th = ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=9.5, leading=12, textColor=colors.white)
+    st_td = ParagraphStyle("td", fontName="Helvetica", fontSize=9.5, leading=12.5)
+    st_tdc = ParagraphStyle("tdc", parent=st_td, alignment=TA_CENTER)
+    st_tdb = ParagraphStyle("tdb", parent=st_td, fontName="Helvetica-Bold", alignment=TA_CENTER)
+    st_prel = ParagraphStyle("prel", fontName="Helvetica-Bold", fontSize=10.5, leading=13,
+                             textColor=colors.HexColor("#c62828"), alignment=TA_CENTER)
+    st_obs = ParagraphStyle("obs", fontName="Helvetica", fontSize=9.5, leading=13)
+    st_firma = ParagraphStyle("firma", fontName="Helvetica", fontSize=9.5, leading=12)
+
+    def celda(*pares):
+        return Paragraph("<br/>".join(
+            f"<font size=7.5 color='#64748b'><b>{t}</b></font><br/><font size=10>{xesc(str(v))}</font>"
+            for t, v in pares), st_cell)
+
+    # --- Encabezado: logo + marca + hospital/estudio ---
+    logo = ""
+    try:
+        ruta = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "logo.png")
+        if os.path.isfile(ruta): logo = Image(ruta, width=52, height=52, kind="proportional")
+    except Exception:
+        logo = ""
+    el = [Table([[logo,
+                  [Paragraph("MonOCAC", st_title), Paragraph("SISTEMA DE MONITOREO Y ANÁLISIS CLÍNICO", st_sub)],
+                  [Paragraph(xesc(HOSPITAL), st_hosp), Paragraph("Laboratorio clínico", st_hosp2),
+                   Paragraph(xesc(o.tipo_analisis), st_est)]]],
+                colWidths=[60, 290, 190], style=TableStyle([
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("LEFTPADDING", (0, 0), (0, 0), 0), ("LEFTPADDING", (2, 0), (2, 0), 6),
+                    ("RIGHTPADDING", (2, 0), (2, 0), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 2)])),
+          Table([["", ""]], colWidths=[W / 2, W / 2], rowHeights=[4], style=TableStyle([
+              ("BACKGROUND", (0, 0), (0, 0), TEAL), ("BACKGROUND", (1, 0), (1, 0), INDIGO),
+              ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+              ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)])),
+          Spacer(1, 12)]
+
+    # --- Tarjeta del paciente ---
+    ed = edad_de(p.fecha_nac)
+    prio = {1: "Crítica", 2: "Urgente", 3: "Rutina"}.get(o.prioridad, "—")
+    sexo = {"M": "Masculino", "F": "Femenino"}.get(p.sexo, p.sexo or "—")
+    area = logic.CATALOGO.get(o.tipo_analisis, {}).get("area")
+    tarjeta = Table([
+        [celda(("PACIENTE", p.nombre), ("EXPEDIENTE", p.expediente)),
+         celda(("EDAD", f"{ed} años" if ed is not None else "—"), ("SEXO", sexo), ("FECHA DE NACIMIENTO", fnac(p.fecha_nac))),
+         celda(("FOLIO", o.folio), ("PRIORIDAD", prio), ("ESTADO", o.estado))],
+        [celda(("ESTUDIO", o.tipo_analisis + (f" · {area}" if area else ""))),
+         celda(("SOLICITANTE", o.solicitante or "—")),
+         celda(("RECIBIDO", fmt_dt(o.creado)), ("ACTUALIZADO", fmt_dt(o.actualizado)))]],
+        colWidths=[190, 175, 175], style=TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#eef2ff")),
+            ("BOX", (0, 0), (-1, -1), .6, BORDE), ("INNERGRID", (0, 0), (-1, -1), .4, BORDE),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 10), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+            ("TOPPADDING", (0, 0), (-1, -1), 8), ("BOTTOMPADDING", (0, 0), (-1, -1), 8)]))
+    el.append(tarjeta)
+
+    # --- Aviso de resultado preliminar ---
     if o.estado != "Entregado":
-        el.append(Paragraph("<font color='#c62828'><b>RESULTADO PRELIMINAR — NO VALIDADO</b></font>", S["Normal"]))
-    rows, sty = [["Parámetro", "Resultado", "Unidad", "Referencia", "Interpretación"]], [
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#10302f")), ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), .4, colors.grey), ("FONTSIZE", (0, 0), (-1, -1), 9)]
+        el += [Spacer(1, 10), Table([[Paragraph("RESULTADO PRELIMINAR — NO VALIDADO", st_prel)]],
+               colWidths=[W], style=TableStyle([
+                   ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fdecec")),
+                   ("TOPPADDING", (0, 0), (-1, -1), 7), ("BOTTOMPADDING", (0, 0), (-1, -1), 7)]))]
+    el.append(Spacer(1, 12))
+
+    # --- Tabla de resultados a todo lo ancho ---
+    FCOLOR = {"crítico": "#c62828", "alto": "#b26a00", "bajo": "#b26a00", "normal": "#3f7a52"}
+    rows = [[Paragraph(h, st_th) for h in ["Parámetro", "Resultado", "Unidad", "Referencia", "Interpretación"]]]
+    sty = [("BACKGROUND", (0, 0), (-1, 0), INDIGO),
+           ("GRID", (0, 0), (-1, -1), .4, BORDE),
+           ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+           ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+           ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5)]
     for k, x in logic.evaluar(o.tipo_analisis, o.resultados).items():
         if x["valor"] is None: continue
-        rows.append([k, x["valor"], x["u"], f"{x['min']} – {x['max']}", x["flag"].upper()])
-        if x["flag"] != "normal":
-            sty.append(("TEXTCOLOR", (0, len(rows) - 1), (-1, len(rows) - 1), colors.HexColor("#c62828" if x["flag"] == "crítico" else "#b26a00")))
-    el += [Spacer(1, 14), Table(rows, style=TableStyle(sty), hAlign="LEFT")]
-    if o.observaciones: el.append(Paragraph(f"<br/><b>Observaciones:</b> {o.observaciones}", S["Normal"]))
-    el.append(Paragraph(f"<br/><br/>Validó: {val.usuario if val else '________________'} &nbsp;·&nbsp; Impreso: {datetime.now():%d/%m/%Y %H:%M} por {u['sub']}", S["Normal"]))
+        i = len(rows)
+        if x["flag"] == "crítico":
+            sty.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#fdf0f0")))
+        elif i % 2 == 0:
+            sty.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#f6f8fc")))
+        rows.append([Paragraph(xesc(k), st_td),
+                     Paragraph(f"<b>{x['valor']}</b>", st_tdb),
+                     Paragraph(xesc(str(x["u"])), st_tdc),
+                     Paragraph(f"{x['min']} – {x['max']}", st_tdc),
+                     Paragraph(f"<font color='{FCOLOR.get(x['flag'], '#64748b')}'><b>{x['flag'].upper()}</b></font>", st_tdc)])
+    el.append(Table(rows, colWidths=[196, 92, 66, 102, 84], style=TableStyle(sty), repeatRows=1))
+
+    # --- Observaciones ---
+    if o.observaciones:
+        el += [Spacer(1, 12), Table([[Paragraph(f"<b>Observaciones:</b> {xesc(o.observaciones)}", st_obs)]],
+               colWidths=[W], style=TableStyle([
+                   ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f1f5f9")),
+                   ("LEFTPADDING", (0, 0), (-1, -1), 10), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                   ("TOPPADDING", (0, 0), (-1, -1), 8), ("BOTTOMPADDING", (0, 0), (-1, -1), 8)]))]
+
+    # --- Firma (el «Impreso…» vive en el pie de página) ---
+    el += [Spacer(1, 30), Table([[""], [Paragraph(f"Validó: <b>{xesc(val.usuario)}</b>" if val else "Validó: ________________", st_firma)]],
+           colWidths=[200], rowHeights=[26, 14], hAlign="LEFT", style=TableStyle([
+               ("LINEBELOW", (0, 0), (-1, 0), .7, colors.HexColor("#1e2433")),
+               ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+               ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))]
+
+    # --- Documento con pie en cada página ---
+    def pie(canvas, doc):
+        canvas.saveState()
+        canvas.setStrokeColor(BORDE); canvas.setLineWidth(.4)
+        canvas.line(36, 36, letter[0] - 36, 36)
+        canvas.setFont("Helvetica", 7.5); canvas.setFillColor(GRIS)
+        canvas.drawString(36, 26, f"MonOCAC · {HOSPITAL}")
+        canvas.drawCentredString(letter[0] / 2, 26, o.folio)
+        canvas.drawRightString(letter[0] - 36, 26, f"Impreso {datetime.now():%d/%m/%Y %H:%M} por {u['sub']} · Página {doc.page}")
+        canvas.restoreState()
     M.audit(db, u["sub"], "Reporte PDF generado", o.folio); db.commit()
-    buf = io.BytesIO(); SimpleDocTemplate(buf, pagesize=letter).build(el); buf.seek(0)
+    buf = io.BytesIO()
+    doc_tpl = BaseDocTemplate(buf, pagesize=letter, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=48,
+                              title=f"MonOCAC {o.folio}", author="MonOCAC")
+    frame = Frame(36, 48, W, letter[1] - 84, id="main", leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)
+    doc_tpl.addPageTemplates([PageTemplate(id="todo", frames=[frame], onPage=pie)])
+    doc_tpl.build(el); buf.seek(0)
     return StreamingResponse(buf, media_type="application/pdf", headers={"Content-Disposition": f"inline; filename={o.folio}.pdf"})
 
 # ---------- Gestión de usuarios (solo admin) ----------
