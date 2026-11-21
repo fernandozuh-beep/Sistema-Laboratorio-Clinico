@@ -58,19 +58,26 @@ label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
 .nav-it .ic{font-size:20px;line-height:1}
 .nav-it.on{background:var(--acc-soft);color:var(--acc);font-weight:700}
 .nav-it:hover{background:var(--acc-soft)}
-.side-bot{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
-.side-av{width:42px;height:42px;border-radius:50%;background:var(--acc2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.side-bot{margin-top:auto;display:flex;flex-direction:column;align-items:center}
 .wrap{flex:1;padding:22px 20px;min-width:0}
 .top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
 .top h1{font-size:24px;font-weight:800;margin:0}
 .top p{color:var(--mut);font-size:13px;margin:2px 0 0}
 .top .sp{flex:1}
 .top .search{width:250px;background:var(--card)}
-.rolchip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 14px 6px 7px}
-.rolchip .av{width:36px;height:36px;border-radius:50%;background:var(--acc2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.rolchip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px 14px 5px 5px}
 .rolchip b{font-size:14px;display:block;line-height:1.15}
 .rolchip span{font-size:12px;color:var(--acc);font-weight:600}
 .icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center}
+.icon-btn.in-chip{width:37px;height:37px;border:0;border-radius:50%;background:var(--acc-soft);font-size:16px;flex:none}
+.icon-btn.in-chip:hover{background:var(--line)}
+.who-btn{background:none;border:0;padding:2px 0;color:inherit;text-align:left;cursor:pointer;display:block}
+.who-btn:hover b{text-decoration:underline}
+.perfil{margin:12px 0 6px}
+.perfil>div{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:9px 0;border-bottom:1px solid var(--line2)}
+.perfil>div:last-child{border-bottom:0}
+.perfil dt{color:var(--mut);font-size:13.5px;font-weight:600;flex:none}
+.perfil dd{margin:0;font-weight:700;text-align:right}
 .btn-new{border:1px solid var(--acc);background:var(--acc);color:#fff;font-weight:700;padding:12px 18px;border-radius:12px;font-size:14.5px;cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.25)}
 /* ---------- KPIs ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
