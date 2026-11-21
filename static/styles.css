@@ -125,6 +125,7 @@ tr.c td{background:var(--crit-bg)}
 .live{display:flex;align-items:center;gap:7px;color:var(--grn);font-size:12.5px;font-weight:700;margin-top:12px}
 .live .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 9px #22c55e;flex:none}
 .live.off{color:var(--mut)}.live.off .dot{background:var(--mut);box-shadow:none}
+.live.auto{color:#d97706}.live.auto .dot{background:#f59e0b;box-shadow:0 0 9px #f59e0b}
 /* ---------- Diálogos, menú, toasts ---------- */
 dialog{background:var(--card);color:var(--ink);border:0;border-radius:16px;padding:22px;width:min(560px,94vw);box-shadow:var(--dlg-shadow)}
 dialog::backdrop{background:var(--backdrop)}
