@@ -6,9 +6,9 @@ Sistema web para gestionar las órdenes de un laboratorio clínico: clasifica, o
 
 ## Capturas
 
-![Pantalla de inicio de sesión](readme-login.png)
+![Pantalla de inicio de sesión](readme-login.png?v=2)
 
-![Panel de órdenes con alertas críticas](readme-panel.png)
+![Panel de órdenes con alertas críticas](readme-panel.png?v=2)
 
 ## Qué hace
 
