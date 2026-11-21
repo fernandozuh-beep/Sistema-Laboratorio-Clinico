@@ -23,7 +23,11 @@ label{display:block;font-weight:700;font-size:14px;margin:10px 0 3px}
 #login{min-height:100vh}
 .login-split{display:flex;min-height:100vh}
 .lg-left{width:55%;background:linear-gradient(150deg,#0b5563 0%,#0e7c86 45%,#4f46e5 130%);color:#fff;padding:56px 64px;display:flex;flex-direction:column}
-.lg-left h1{font-size:42px;margin:32px 0 0;line-height:1.12}
+.brandrow{display:flex;align-items:center;gap:22px}
+.brandrow h1{margin:0;line-height:1.05}
+.brandrow .bname{display:block;font-size:48px;font-weight:800;letter-spacing:.01em}
+.brandrow .bsub{display:block;font-size:12.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;opacity:.85;margin-top:8px;line-height:1.5}
+.lg-left .brandrow .logobox{width:96px;height:96px}
 .lg-left .lead{font-size:18px;opacity:.88;margin-top:14px;line-height:1.55;max-width:520px}
 .feats{margin-top:42px;display:flex;flex-direction:column;gap:18px}
 .feat{display:flex;gap:14px;align-items:flex-start}
@@ -128,7 +132,7 @@ dialog::backdrop{background:var(--backdrop)}
 .menu button.danger{color:var(--red)}
 .ferr{color:var(--red);font-size:13px;margin:2px 0 0}
 @media(max-width:1100px){.cols{grid-template-columns:1fr}}
-@media(max-width:820px){.login-split{flex-direction:column}.lg-left{width:100%;padding:34px 28px}.lg-left h1{font-size:32px}.feats{display:none}}
+@media(max-width:820px){.login-split{flex-direction:column}.lg-left{width:100%;padding:34px 28px}.brandrow .bname{font-size:34px}.lg-left .brandrow .logobox{width:72px;height:72px}.feats{display:none}}
 @media(max-width:600px){.g2{grid-template-columns:1fr}.row{grid-template-columns:1fr;gap:2px;margin:12px 0}
  #side{width:64px}.nav-it{width:48px;font-size:9px}.wrap{padding:16px 12px}.top .search{width:100%;order:5}}
 /* ---------- Impresión: solo la tabla de órdenes, sin navegación ni acciones ---------- */
