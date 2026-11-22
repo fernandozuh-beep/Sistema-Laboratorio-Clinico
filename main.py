@@ -1,5 +1,5 @@
 import json, os, uuid
-from datetime import timedelta
+from datetime import timedelta, timezone
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -88,7 +88,8 @@ def get_o(db, id):
 @app.post("/api/auth/login")
 def login(f: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
     u = db.query(m.Usuario).filter_by(username=f.username).first()
-    if u and u.bloqueado_hasta and u.bloqueado_hasta > m.now():
+    bh = u.bloqueado_hasta if u else None
+    if bh and (bh if bh.tzinfo else bh.replace(tzinfo=timezone.utc)) > m.now():
         raise HTTPException(429, "Cuenta bloqueada 10 minutos por intentos fallidos")
     if not u or not u.activo or not sec.check_pw(f.password, u.hashed_password):
         if u:
