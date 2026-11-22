@@ -121,6 +121,10 @@ tr.c td{background:var(--crit-bg)}
 .alert b{font-size:14.5px}.alert .v{color:var(--red);font-weight:800;font-size:16px}
 .alert small{color:var(--mut);display:block;margin-top:3px;font-size:12px;line-height:1.45}
 .alert .go{margin-top:9px;background:var(--red-solid);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12.5px;font-weight:700;width:100%;cursor:pointer}
+.alert .ack{margin-top:9px;background:var(--card);color:var(--teal);border:1.5px solid var(--teal);padding:8px 12px;border-radius:8px;font-size:12.5px;font-weight:700;width:100%;cursor:pointer}
+.alert .ack:hover{background:var(--teal-soft)}
+.alert.acked{opacity:.78}
+.alert .ackbox{margin-top:9px;background:var(--grn-bg);color:var(--grn);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:700}
 .okbox{border:1.5px dashed var(--line);border-radius:11px;padding:11px 13px;color:var(--mut);font-size:12.5px;line-height:1.5}
 .live{display:flex;align-items:center;gap:7px;color:var(--grn);font-size:12.5px;font-weight:700;margin-top:12px}
 .live .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 9px #22c55e;flex:none}
