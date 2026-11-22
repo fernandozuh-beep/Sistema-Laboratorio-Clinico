@@ -52,10 +52,24 @@ class OrdenIn(BaseModel):
     observaciones: str = ""
 class EstadoIn(BaseModel): estado: str
 class ResIn(BaseModel): resultados: dict[str, float]
+class AcuseIn(BaseModel): parametro: str
 
 # ---------- Utilidades ----------
 def audit(db, user, accion, folio=None, prev=None, new=None):
     db.add(m.Auditoria(usuario=user, accion=accion, folio=folio, datos_previos=prev, datos_nuevos=new))
+
+def acuses_de(db, folios):
+    r = {}
+    if not folios: return r
+    rows = db.query(m.Auditoria).filter(m.Auditoria.accion == "Alerta crítica acusada",
+                                        m.Auditoria.folio.in_(folios)).order_by(m.Auditoria.id).all()
+    for a in rows:
+        d = a.datos_nuevos or {}
+        if d.get("parametro"):
+            r.setdefault(a.folio, {})[d["parametro"]] = {
+                "por": d.get("nombre") or a.usuario,
+                "cuando": a.fecha.isoformat() if a.fecha else None}
+    return r
 
 def out(o):
     return {"id": o.id, "folio": o.folio, "expediente": o.paciente.expediente, "paciente": o.paciente.nombre,
@@ -99,7 +113,11 @@ def listar(q: str = "", estado: str = "", db=Depends(get_db), u=Depends(sec.user
         k = f"%{q}%"
         qs = qs.filter(or_(m.Orden.folio.ilike(k), m.Paciente.nombre.ilike(k),
                            m.Paciente.expediente.ilike(k), m.Orden.tipo_analisis.ilike(k)))
-    return [out(o) for o in qs.order_by(m.Orden.prioridad, m.Orden.creado.desc()).limit(300)]
+    ordenes = qs.order_by(m.Orden.prioridad, m.Orden.creado.desc()).limit(300)
+    res = [out(o) for o in ordenes]
+    ac = acuses_de(db, [o.folio for o in ordenes])
+    for r in res: r["acuses"] = ac.get(r["folio"], {})
+    return res
 
 @app.post("/api/ordenes", status_code=201)
 def crear(d: OrdenIn, db=Depends(get_db), u=Depends(sec.roles("admin", "medico", "recepcion"))):
@@ -141,6 +159,22 @@ def borrar(id: int, db=Depends(get_db), u=Depends(sec.roles("admin"))):
 @app.put("/api/ordenes/{id}/resultados")
 async def capturar(id: int, d: ResIn, db=Depends(get_db), u=Depends(sec.roles("admin", "quimico"))):
     return out(await extras.guardar(db, get_o(db, id), d.resultados, u["sub"]))
+
+@app.post("/api/ordenes/{id}/acuse")
+def acusar(id: int, d: AcuseIn, db=Depends(get_db), u=Depends(sec.roles("admin", "medico", "quimico"))):
+    o = get_o(db, id)
+    if o.estado == "Entregado": raise HTTPException(422, "La orden ya fue entregada")
+    p = logic.evaluar(o.tipo_analisis, o.resultados).get(d.parametro)
+    if not p or p.get("flag") != "crítico" or p.get("valor") is None:
+        raise HTTPException(422, "Ese parámetro no está en valor crítico")
+    ya = acuses_de(db, [o.folio]).get(o.folio, {}).get(d.parametro)
+    if ya: return {"ok": True, "acuse": ya, "repetido": True}
+    usr = db.query(m.Usuario).filter_by(username=u["sub"]).first()
+    info = {"parametro": d.parametro, "valor": p["valor"], "unidad": p["u"],
+            "solicitante": o.solicitante, "nombre": usr.nombre if usr else u["sub"]}
+    audit(db, u["sub"], "Alerta crítica acusada", o.folio, None, info)
+    db.commit()
+    return {"ok": True, "acuse": {"por": info["nombre"], "cuando": m.now().isoformat()}}
 
 @app.put("/api/ordenes/{id}/estado")
 async def cambiar_estado(id: int, d: EstadoIn, db=Depends(get_db), u=Depends(sec.roles("admin", "quimico"))):
